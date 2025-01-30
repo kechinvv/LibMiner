@@ -1,0 +1,24 @@
+plugins {
+    id 'java'
+}
+
+group = "org.resolver"
+version = "1.0"
+repositories {
+    mavenCentral()
+}
+configurations {
+    dependencyConfig
+}
+
+dependencies {
+    dependencyConfig '%s:%s:%s'
+}
+
+tasks.register('downloadJars') {
+    doLast {
+        configurations.dependencyConfig.resolve().each { File file ->
+            println "Resolved JAR: ${file.absolutePath}"
+        }
+    }
+}

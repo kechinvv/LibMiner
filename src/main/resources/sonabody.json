@@ -1,0 +1,9 @@
+{
+  "purl": "pkg:maven/%s",
+  "page": %d,
+  "size": %d,
+  "searchTerm": "%s",
+  "filter": [
+    "dependencyRef:DIRECT"
+  ]
+}

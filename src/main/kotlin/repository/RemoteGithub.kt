@@ -64,7 +64,6 @@ class RemoteGithub(var url: String, var name: String, val client: OkHttpClient) 
 
     @Throws(InterruptedException::class, IOException::class)
     override fun cloneTo(outputDir: Path): LocalRepository {
-        var jarName: String? = null
         val downloadURL = getAssets()
         if (downloadURL != null) {
             Files.createDirectories(outputDir)
@@ -78,7 +77,7 @@ class RemoteGithub(var url: String, var name: String, val client: OkHttpClient) 
             if (!downloadURL.endsWith(".jar")) {
                 unzip(fileName, outputDir.toString())
                 Files.delete(Path(fileName))
-            } else jarName = fileName
+            }
         } else {
             if (outputDir.notExists()) {
                 Git.cloneRepository()
@@ -92,7 +91,7 @@ class RemoteGithub(var url: String, var name: String, val client: OkHttpClient) 
         return LocalRepository(outputDir.toFile())
     }
 
-    fun unzip(zipFileName: String, destDirectory: String) {
+    private fun unzip(zipFileName: String, destDirectory: String) {
         File(destDirectory).run {
             if (!exists()) {
                 mkdirs()

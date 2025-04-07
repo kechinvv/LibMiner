@@ -1,0 +1,22 @@
+libName: ""
+ghToken: null
+
+mavenPath: null
+gradlePath: null
+gradleVersion: null
+
+workdir: "./"
+
+kAlg: 1
+goal: 100
+
+allProj: false
+
+traversJumps: 200
+traversDepth: 10
+traceLimit: 10000000
+traceNode: NAME
+unionEnd: true
+toJson: true
+
+saveDb: false

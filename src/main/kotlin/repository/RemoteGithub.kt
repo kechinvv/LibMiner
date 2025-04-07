@@ -2,10 +2,10 @@ package org.kechinvv.repository
 
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import config.Configurations
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.eclipse.jgit.api.Git
+import org.kechinvv.config.Configuration
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
@@ -17,12 +17,14 @@ import kotlin.io.path.Path
 import kotlin.io.path.notExists
 
 
-class RemoteGithub(var url: String, var name: String, val client: OkHttpClient) : RemoteRepository {
+class RemoteGithub(var url: String, var name: String, val client: OkHttpClient, val token: String) :
+    RemoteRepository {
 
-    constructor(repoJSON: JsonObject, client: OkHttpClient) : this(
+    constructor(repoJSON: JsonObject, client: OkHttpClient, token: String) : this(
         repoJSON.get("html_url").toString(),
         repoJSON.get("full_name").toString(),
-        client
+        client,
+        token
     )
 
     init {
@@ -38,7 +40,7 @@ class RemoteGithub(var url: String, var name: String, val client: OkHttpClient) 
     fun getAssets(): String? {
         val request = Request.Builder()
             .url("https://api.github.com/repos/$name/releases/latest")
-            .addHeader("Authorization", "Bearer ${Configurations.ghToken}")
+            .addHeader("Authorization", "Bearer $token")
             .addHeader("Accept", "application/vnd.github+json")
             .build()
         val response = client.newCall(request).execute().body?.string()

@@ -14,7 +14,8 @@ import soot.jimple.internal.JInvokeStmt
 import soot.jimple.spark.pag.PAG
 import soot.jimple.toolkits.ide.icfg.JimpleBasedInterproceduralCFG
 
-class SequenceCollector(val lib: String, val storage: Storage, val configuration: Configuration) : SceneTransformer() {
+class SequenceCollectorTransformer(val lib: String, val storage: Storage, val configuration: Configuration) :
+    SceneTransformer() {
     lateinit var icfg: JimpleBasedInterproceduralCFG
     lateinit var analysis: PAG
     private var counter = 0

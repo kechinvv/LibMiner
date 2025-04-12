@@ -2,13 +2,16 @@ package org.kechinvv
 
 import com.charleskorn.kaml.Yaml
 import com.charleskorn.kaml.decodeFromStream
+import org.kechinvv.analysis.Instrumentation
 import org.kechinvv.config.Configuration
 import java.io.FileInputStream
 
 fun main() {
     val configuration =
         Yaml.default.decodeFromStream(Configuration.serializer(), FileInputStream("config.yaml"))
-    println(configuration.kAlg)
+    //println(configuration.kAlg)
+    val classpath = "C:\\Users\\valer\\IdeaProjects\\libminer_test\\build\\libs\\libminer_test-1.0-SNAPSHOT.jar"
+    Instrumentation().runAnalyze(classpath)
 //    val target = Paths.get("./downloaded_reps")
 //    target.createDirectory()
 //    RemoteLib("com.atlassian.bamboo", "bamboo-specs-runner", "10.2.1").cloneTo(target)

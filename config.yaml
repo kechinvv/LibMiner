@@ -1,9 +1,9 @@
 libName: ""
-ghToken: null
+ghToken: ""
 
-mavenPath: null
-gradlePath: null
-gradleVersion: null
+mavenPath: ""
+gradlePath: ""
+gradleVersion: ""
 
 workdir: "./"
 

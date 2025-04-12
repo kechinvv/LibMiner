@@ -1,37 +1,30 @@
 package org.kechinvv.analysis
 
-import org.kechinvv.config.Configuration
-import org.kechinvv.storage.Storage
 import soot.G
 import soot.PackManager
 import soot.Scene
+import soot.SootClass.SIGNATURES
 import soot.Transform
 import soot.options.Options
 import java.io.File
 
-
-class SceneExtractor(val lib: String, val configuration: Configuration, val storage: Storage) {
-
-
+class Instrumentation {
     fun runAnalyze(classpath: String): Boolean {
         try {
             init()
             Options.v().set_prepend_classpath(true)
-            Options.v().set_whole_program(true)
             Options.v().set_allow_phantom_refs(true)
-            Options.v().set_src_prec(Options.src_prec_only_class)
             Options.v().set_process_dir(listOf(classpath))
-            Options.v().set_output_format(Options.output_format_jimple)
-            Options.v().setPhaseOption("cg.spark", "enabled:true")
 
             val javaPaths = File("javapaths.txt").readText().trim()
             var classPaths = javaPaths.replace(Regex("(\n|\r|\r\n)"), File.pathSeparator)
-            if (classPaths == "") classPaths = classpath
-            else classPaths += File.pathSeparator + classpath
+            classPaths += File.pathSeparator + classpath
 
             Options.v().set_soot_classpath(classPaths)
             Scene.v().loadNecessaryClasses()
+            Scene.v().addBasicClass("java.lang.System", SIGNATURES);
             PackManager.v().runPacks()
+            PackManager.v().writeOutput();
             return true
         } catch (e: Throwable) {
             e.printStackTrace()
@@ -41,9 +34,7 @@ class SceneExtractor(val lib: String, val configuration: Configuration, val stor
 
     fun init() {
         G.reset()
-        if (!PackManager.v().hasPack("wjtp.ifds.SequenceCollector")) PackManager.v().getPack("wjtp")
-            .add(Transform("wjtp.ifds.SequenceCollector", SequenceCollectorTransformer(lib, storage, configuration)))
+        if (!PackManager.v().hasPack("jtp.ihash")) PackManager.v().getPack("jtp")
+            .add(Transform("jtp.ihash", InstrumentationTransformer("")))
     }
-
-
 }

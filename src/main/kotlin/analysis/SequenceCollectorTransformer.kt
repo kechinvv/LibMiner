@@ -5,6 +5,7 @@ import kotlinx.serialization.json.Json
 import org.kechinvv.config.Configuration
 import org.kechinvv.entities.MethodData
 import org.kechinvv.storage.Storage
+import org.kechinvv.utils.foundLib
 import soot.*
 import soot.Unit
 import soot.jimple.InvokeExpr
@@ -82,7 +83,7 @@ class SequenceCollectorTransformer(val lib: String, val storage: Storage, val co
                         succ as AbstractStmt
                         if (succ.invokeExpr.method.declaringClass in Scene.v().applicationClasses)
                             method = succ.invokeExpr.method
-                        if (foundLib(succ.invokeExpr.method)) {
+                        if (method?.foundLib(lib) == true) {
                             storage.saveMethod(succ.invokeExpr.method, configuration.traceNode)
                             val methodLib = succ.invokeExpr.method
                             klass = if (methodLib.isStatic) "${methodLib.declaringClass}__s"
@@ -173,9 +174,5 @@ class SequenceCollectorTransformer(val lib: String, val storage: Storage, val co
         return analysis.reachingObjects(inv.useBoxes[0].value as Local)
     }
 
-    private fun foundLib(method: SootMethod): Boolean {
-        return method.declaringClass.toString().startsWith("$lib.", true) ||
-                method.declaringClass.toString().lowercase() == lib.lowercase()
-    }
 
 }

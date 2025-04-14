@@ -11,7 +11,7 @@ fun main() {
         Yaml.default.decodeFromStream(Configuration.serializer(), FileInputStream("config.yaml"))
     //println(configuration.kAlg)
     val classpath = "C:\\Users\\valer\\IdeaProjects\\libminer_test\\build\\libs\\libminer_test-1.0-SNAPSHOT.jar"
-    Instrumentation().runAnalyze(classpath)
+    Instrumentation().runAnalyze(classpath, "java")
 //    val target = Paths.get("./downloaded_reps")
 //    target.createDirectory()
 //    RemoteLib("com.atlassian.bamboo", "bamboo-specs-runner", "10.2.1").cloneTo(target)

@@ -1,5 +1,8 @@
 package org.kechinvv.analysis
 
+import kotlinx.serialization.json.Json
+import org.kechinvv.entities.MethodData
+import org.kechinvv.utils.foundLib
 import soot.*
 import soot.javaToJimple.DefaultLocalGenerator
 import soot.jimple.Jimple
@@ -12,10 +15,12 @@ class InstrumentationTransformer(val lib: String) : BodyTransformer() {
 
 
     override fun internalTransform(body: Body?, phase: String?, options: MutableMap<String, String>?) {
+        val jimple = Jimple.v()
         val units = body?.units ?: return
+        if (units.isEmpty()) return
+
         val lg = DefaultLocalGenerator(body)
         val stmtIt = units.snapshotIterator()
-        //Scene.v().loadClassAndSupport("java.lang.System")
 
         //methods
         val identityHashCodeMethod = Scene.v()
@@ -23,65 +28,65 @@ class InstrumentationTransformer(val lib: String) : BodyTransformer() {
         val toStringMethod = Scene.v().getMethod("<java.lang.Integer: java.lang.String toString(int)>")
         val concatMethod = Scene.v().getMethod("<java.lang.String: java.lang.String concat(java.lang.String)>")
 
-        val jimple = Jimple.v()
+        //create System.out
+        val sysOutVar: Local = lg.generateLocal(RefType.v("java.io.PrintStream"))
+        val sysOutField = Scene.v().getField("<java.lang.System: java.io.PrintStream out>")
+        val sysOutAssignStmt =
+            Jimple.v().newAssignStmt(sysOutVar, jimple.newStaticFieldRef(sysOutField.makeRef()))
+        units.insertAfter(sysOutAssignStmt, units.first)
+
 
         while (stmtIt.hasNext()) {
             val stmt = stmtIt.next() as Stmt
 
-            if (!stmt.containsInvokeExpr()) {
-                continue;
-            }
+            if (!stmt.containsInvokeExpr()) continue
+            if (!stmt.invokeExpr.method.foundLib(lib)) continue
 
+
+            val methodData = MethodData.fromSootMethod(stmt.invokeExpr.method)
             val generatedUnits: ArrayList<soot.Unit> = ArrayList()
-
-            if (stmt.invokeExpr.useBoxes.size == 0) {
-                println("Statement with 0 box = $stmt")
-                continue
-            }
-            val analyzedObj = stmt.invokeExpr.useBoxes[0].value
-
             val prefixStr = StringConstant.v(
                 String.format(
-                    "[LibMiner] stmt: %s, base: %s, iHash: ",
-                    stmt.toString(),
-                    analyzedObj.toString()
+                    "[LibMiner] %s | iHash: ",
+                    Json.encodeToString(methodData)
                 )
             )
+
+            // val a = prefix
             val prefixStrVar = lg.generateLocal(RefType.v("java.lang.String"))
             val assignPrefixStmt = jimple.newAssignStmt(prefixStrVar, prefixStr)
             generatedUnits.add(assignPrefixStmt)
 
-            //Get identityHashCode
-            val intHashCodeVar = lg.generateLocal(IntType.v())
-            val getIdentityHashCodeInvoke = jimple.newStaticInvokeExpr(identityHashCodeMethod.makeRef(), analyzedObj)
-            val getIdentityHashCodeStmt = jimple.newAssignStmt(intHashCodeVar, getIdentityHashCodeInvoke)
-            generatedUnits.add(getIdentityHashCodeStmt)
+            val printableVar = if (methodData.isStatic) {
+                prefixStrVar
+            } else {
+                val analyzedObj = stmt.invokeExpr.useBoxes[0].value
 
-            //Assign string for printing
-            val strHashCodeVar = lg.generateLocal(RefType.v("java.lang.String"))
-            val intToStrInvoke = jimple.newStaticInvokeExpr(toStringMethod.makeRef(), intHashCodeVar)
-            val strHashStmt = jimple.newAssignStmt(strHashCodeVar, intToStrInvoke)
-            generatedUnits.add(strHashStmt)
+                //Get identityHashCode
+                val intHashCodeVar = lg.generateLocal(IntType.v())
+                val getIdentityHashCodeInvoke =
+                    jimple.newStaticInvokeExpr(identityHashCodeMethod.makeRef(), analyzedObj)
+                val getIdentityHashCodeStmt = jimple.newAssignStmt(intHashCodeVar, getIdentityHashCodeInvoke)
+                generatedUnits.add(getIdentityHashCodeStmt)
 
+                //Assign string for printing
+                val strHashCodeVar = lg.generateLocal(RefType.v("java.lang.String"))
+                val intToStrInvoke = jimple.newStaticInvokeExpr(toStringMethod.makeRef(), intHashCodeVar)
+                val strHashStmt = jimple.newAssignStmt(strHashCodeVar, intToStrInvoke)
+                generatedUnits.add(strHashStmt)
 
-            // printableVar = "info str ".concat(strHashCodeVar)
-            val printableVar = lg.generateLocal(RefType.v("java.lang.String"))
-            val concatInvoke = jimple.newVirtualInvokeExpr(prefixStrVar, concatMethod.makeRef(), strHashCodeVar)
-            val assignConcatStmt = jimple.newAssignStmt(printableVar, concatInvoke)
-            generatedUnits.add(assignConcatStmt)
-
-            //create System.out
-            val sysOutVar: Local = lg.generateLocal(RefType.v("java.io.PrintStream"))
-            val sysOutField = Scene.v().getField("<java.lang.System: java.io.PrintStream out>")
-            val sysOutAssignStmt =
-                Jimple.v().newAssignStmt(sysOutVar, jimple.newStaticFieldRef(sysOutField.makeRef()))
-            generatedUnits.add(sysOutAssignStmt)
-
+                // printableVar = "info str ".concat(strHashCodeVar)
+                val printableVar = lg.generateLocal(RefType.v("java.lang.String"))
+                val concatInvoke = jimple.newVirtualInvokeExpr(prefixStrVar, concatMethod.makeRef(), strHashCodeVar)
+                val assignPrintableStmt = jimple.newAssignStmt(printableVar, concatInvoke)
+                generatedUnits.add(assignPrintableStmt)
+                printableVar
+            }
 
             // Create println method call and provide its parameter
             val printlnMethod = Scene.v().grabMethod("<java.io.PrintStream: void println(java.lang.String)>")
-            val printlnMethodCallStmt = Jimple.v()
-                .newInvokeStmt(Jimple.v().newVirtualInvokeExpr(sysOutVar, printlnMethod.makeRef(), printableVar))
+            val printlnMethodCallStmt = jimple
+                .newInvokeStmt(jimple.newVirtualInvokeExpr(sysOutVar, printlnMethod.makeRef(), printableVar))
             generatedUnits.add(printlnMethodCallStmt)
 
             units.insertAfter(generatedUnits, stmt)

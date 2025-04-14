@@ -9,12 +9,14 @@ import soot.options.Options
 import java.io.File
 
 class Instrumentation {
-    fun runAnalyze(classpath: String): Boolean {
+    fun runAnalyze(classpath: String, lib: String): Boolean {
         try {
-            init()
+            init(lib)
             Options.v().set_prepend_classpath(true)
             Options.v().set_allow_phantom_refs(true)
             Options.v().set_process_dir(listOf(classpath))
+//            Options.v().set_output_jar(true)
+//            Options.v().set_output_dir(classpath)
 
             val javaPaths = File("javapaths.txt").readText().trim()
             var classPaths = javaPaths.replace(Regex("(\n|\r|\r\n)"), File.pathSeparator)
@@ -32,9 +34,9 @@ class Instrumentation {
         }
     }
 
-    fun init() {
+    fun init(lib: String) {
         G.reset()
         if (!PackManager.v().hasPack("jtp.ihash")) PackManager.v().getPack("jtp")
-            .add(Transform("jtp.ihash", InstrumentationTransformer("")))
+            .add(Transform("jtp.ihash", InstrumentationTransformer(lib)))
     }
 }

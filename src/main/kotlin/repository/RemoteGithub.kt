@@ -90,7 +90,7 @@ class RemoteGithub(var url: String, var name: String, val client: OkHttpClient, 
                     .call().close()
             }
         }
-        return LocalRepository(outputDir.toFile())
+        return JarLocalRepository(outputDir.toFile())
     }
 
     private fun unzip(zipFileName: String, destDirectory: String) {

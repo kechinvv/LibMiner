@@ -9,14 +9,14 @@ import soot.options.Options
 import java.io.File
 
 class Instrumentation {
-    fun runAnalyze(classpath: String, lib: String): Boolean {
+    fun runAnalyze(classpath: String, lib: String, outputDir: String, jar: Boolean): Boolean {
         try {
             init(lib)
             Options.v().set_prepend_classpath(true)
             Options.v().set_allow_phantom_refs(true)
             Options.v().set_process_dir(listOf(classpath))
-//            Options.v().set_output_jar(true)
-//            Options.v().set_output_dir(classpath)
+            Options.v().set_output_jar(jar)
+            Options.v().set_output_dir(outputDir)
 
             val javaPaths = File("javapaths.txt").readText().trim()
             var classPaths = javaPaths.replace(Regex("(\n|\r|\r\n)"), File.pathSeparator)

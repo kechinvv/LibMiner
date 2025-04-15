@@ -47,7 +47,7 @@ data class RemoteLib(val group: String, val name: String, val version: String) :
                             LOG.info("Resolved artifact: " + file.absolutePath)
                             file.copyTo(resDir.resolve(file.name).toFile())
                         }
-                        return LocalRepository(resDir.toFile())
+                        return JarLocalRepository(resDir.toFile())
                     }
                     return null
                 }

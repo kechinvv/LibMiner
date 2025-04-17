@@ -1,5 +1,6 @@
 package org.kechinvv.analysis
 
+import org.gradle.api.JavaVersion
 import soot.G
 import soot.PackManager
 import soot.Scene
@@ -7,6 +8,11 @@ import soot.SootClass.SIGNATURES
 import soot.Transform
 import soot.options.Options
 import java.io.File
+import java.nio.file.CopyOption
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.nio.file.StandardCopyOption
+
 
 class Instrumentation {
     fun runAnalyze(classpath: String, lib: String, outputDir: String, jar: Boolean): Boolean {
@@ -17,14 +23,30 @@ class Instrumentation {
             Options.v().set_process_dir(listOf(classpath))
             Options.v().set_output_jar(jar)
             Options.v().set_output_dir(outputDir)
+            Options.v().set_java_version(11)
 
             val javaPaths = File("javapaths.txt").readText().trim()
             var classPaths = javaPaths.replace(Regex("(\n|\r|\r\n)"), File.pathSeparator)
-            classPaths += File.pathSeparator + classpath
+            classPaths += File.pathSeparator + classpath + File.pathSeparator
+
+            Files.copy(
+                Paths.get(this::class::class.java.getResource("/LibMinerInstrumentationHelper.class")!!.toURI()),
+                Paths.get(classpath, "LibMinerInstrumentationHelper.class"),
+                StandardCopyOption.REPLACE_EXISTING
+            )
 
             Options.v().set_soot_classpath(classPaths)
+
+//            Scene.v().addBasicClass("java.lang.Thread", SIGNATURES);
+//            Scene.v().addBasicClass("java.nio.file.Paths", SIGNATURES);
+//            Scene.v().addBasicClass("java.nio.file.StandardOpenOption", SIGNATURES)
+//            Scene.v().addBasicClass("java.nio.file.Files", SIGNATURES);
+//            Scene.v().addBasicClass("java.lang.System", SIGNATURES);
+            Scene.v().addBasicClass("LibMinerInstrumentationHelper", SIGNATURES)
             Scene.v().loadNecessaryClasses()
-            Scene.v().addBasicClass("java.lang.System", SIGNATURES);
+
+
+
             PackManager.v().runPacks()
             PackManager.v().writeOutput();
             return true
@@ -37,6 +59,14 @@ class Instrumentation {
     fun init(lib: String) {
         G.reset()
         if (!PackManager.v().hasPack("jtp.ihash")) PackManager.v().getPack("jtp")
-            .add(Transform("jtp.ihash", InstrumentationTransformer(lib)))
+            .add(
+                Transform(
+                    "jtp.ihash",
+                    InstrumentationTransformer(
+                        lib,
+                        "C:\\Users\\valer\\IdeaProjects\\libminer_test"
+                    )
+                )
+            )
     }
 }

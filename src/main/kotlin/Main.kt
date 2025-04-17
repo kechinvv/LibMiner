@@ -13,8 +13,9 @@ fun main() {
         Yaml.default.decodeFromStream(Configuration.serializer(), FileInputStream("config.yaml"))
     val classpath_jar = "C:\\Users\\valer\\IdeaProjects\\libminer_test\\build\\libs\\libminer_test-1.0-SNAPSHOT.jar"
     val classpath = "C:\\Users\\valer\\IdeaProjects\\libminer_test\\build\\classes\\java\\main"
-    //Instrumentation().runAnalyze(classpath, "com.google.gson", classpath, false)
     val local = GradleLocalRepository(File("C:\\Users\\valer\\IdeaProjects\\libminer_test"), configuration)
+    local.build()
+    Instrumentation().runAnalyze(classpath, "com.google.gson", classpath, false)
     local.runTests()
 //    val target = Paths.get("./downloaded_reps")
 //    target.createDirectory()

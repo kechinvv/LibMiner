@@ -15,7 +15,7 @@ fun main() {
     val classpath = "C:\\Users\\valer\\IdeaProjects\\libminer_test\\build\\classes\\java\\main"
     val local = GradleLocalRepository(File("C:\\Users\\valer\\IdeaProjects\\libminer_test"), configuration)
     local.build()
-    Instrumentation().runAnalyze(classpath, "com.google.gson", classpath, false)
+    Instrumentation().runAnalyze(classpath, "java", classpath, false)
     local.runTests()
 //    val target = Paths.get("./downloaded_reps")
 //    target.createDirectory()

@@ -1,6 +1,5 @@
 package org.kechinvv.analysis
 
-import org.gradle.api.JavaVersion
 import soot.G
 import soot.PackManager
 import soot.Scene
@@ -8,7 +7,6 @@ import soot.SootClass.SIGNATURES
 import soot.Transform
 import soot.options.Options
 import java.io.File
-import java.nio.file.CopyOption
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
@@ -34,18 +32,11 @@ class Instrumentation {
                 Paths.get(classpath, "LibMinerInstrumentationHelper.class"),
                 StandardCopyOption.REPLACE_EXISTING
             )
-
             Options.v().set_soot_classpath(classPaths)
 
-//            Scene.v().addBasicClass("java.lang.Thread", SIGNATURES);
-//            Scene.v().addBasicClass("java.nio.file.Paths", SIGNATURES);
-//            Scene.v().addBasicClass("java.nio.file.StandardOpenOption", SIGNATURES)
-//            Scene.v().addBasicClass("java.nio.file.Files", SIGNATURES);
-//            Scene.v().addBasicClass("java.lang.System", SIGNATURES);
+
             Scene.v().addBasicClass("LibMinerInstrumentationHelper", SIGNATURES)
             Scene.v().loadNecessaryClasses()
-
-
 
             PackManager.v().runPacks()
             PackManager.v().writeOutput();

@@ -5,7 +5,7 @@ import soot.SootMethod
 
 
 @Serializable
-data class MethodData(val name: String, val args: List<String>, val isStatic: Boolean) {
+data class MethodData(val name: String, val args: List<String>, val isStatic: Boolean, val klass: String) {
     companion object MethodParser {
         fun fromSootMethod(method: SootMethod): MethodData {
             val name = method.name
@@ -14,7 +14,7 @@ data class MethodData(val name: String, val args: List<String>, val isStatic: Bo
                 val finType = type.defaultFinalType.toString()
                 args.add(finType)
             }
-            return MethodData(name, args, method.isStatic)
+            return MethodData(name, args, method.isStatic, method.declaringClass.toString())
         }
     }
 

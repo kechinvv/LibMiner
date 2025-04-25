@@ -15,8 +15,10 @@ fun main() {
     val classpath = "C:\\Users\\valer\\IdeaProjects\\libminer_test\\build\\classes\\java\\main"
     val local = GradleLocalRepository(File("C:\\Users\\valer\\IdeaProjects\\libminer_test"), configuration)
     local.build()
+    local.cleanLibMinerLogs()
     Instrumentation().runAnalyze(classpath, "java", classpath, false)
     local.runTests()
+    println(local.extractTracesFromLogs())
 //    val target = Paths.get("./downloaded_reps")
 //    target.createDirectory()
 //    RemoteLib("com.atlassian.bamboo", "bamboo-specs-runner", "10.2.1").cloneTo(target)

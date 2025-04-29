@@ -6,6 +6,7 @@ import org.kechinvv.config.Configuration
 import org.kechinvv.entities.MethodData
 import org.kechinvv.storage.Storage
 import org.kechinvv.utils.foundLib
+import org.kechinvv.utils.isEntryPoint
 import soot.*
 import soot.Unit
 import soot.jimple.InvokeExpr
@@ -26,8 +27,7 @@ class SequenceCollectorTransformer(val lib: String, val storage: Storage, val co
         val entryPoints = mutableListOf<SootMethod>()
         Scene.v().applicationClasses.forEach { klass ->
             klass.methods.forEach {
-                if (it.isMain) entryPoints.add(it)
-                //TODO: matching methods with entry points patterns
+                if (it.isEntryPoint()) entryPoints.add(it)
             }
         }
         println("Entry points size: ${entryPoints.size}")

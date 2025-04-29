@@ -1,8 +1,8 @@
 package org.kechinvv.repository
 
-import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import org.kechinvv.entities.InvokeData
+import org.kechinvv.entities.MethodData
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
@@ -22,7 +22,7 @@ abstract class LocalRepository(val file: File) {
         Files.walk(file.toPath(), 1).filter { it.name.endsWith("libminer.log") }.forEach { Files.delete(it) }
     }
 
-    fun extractTracesFromLogs(): Map<String, List<InvokeData>> {
+    fun extractTracesFromLogs(): Map<String, List<MethodData>> {
         val separatedTraces = HashMap<String, MutableList<InvokeData>>()
         Files.walk(file.toPath(), 1).filter { it.name.endsWith("libminer.log") }.forEach { logFile ->
             logFile.readLines().forEach { strInvokeData ->
@@ -33,7 +33,7 @@ abstract class LocalRepository(val file: File) {
             }
         }
         separatedTraces.forEach{ (_, trace) -> trace.sortBy { invokeData -> invokeData.date.toLong() }}
-        return separatedTraces
+        return separatedTraces.mapValues { pair -> pair.value.map { invokeData -> invokeData.methodData } }
     }
 
 

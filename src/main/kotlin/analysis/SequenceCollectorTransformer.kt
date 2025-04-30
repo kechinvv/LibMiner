@@ -27,7 +27,7 @@ class SequenceCollectorTransformer(val lib: String, val storage: Storage, val co
         val entryPoints = mutableListOf<SootMethod>()
         Scene.v().applicationClasses.forEach { klass ->
             klass.methods.forEach {
-                if (it.isEntryPoint()) entryPoints.add(it)
+                if (it.isEntryPoint(emptyList())) entryPoints.add(it)
             }
         }
         println("Entry points size: ${entryPoints.size}")

@@ -1,6 +1,8 @@
 package org.kechinvv.utils
 
 import org.kechinvv.entities.EntryFilter
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import soot.SootMethod
 
 fun SootMethod.foundLib(lib: String): Boolean {
@@ -17,4 +19,9 @@ fun SootMethod.isEntryPoint(filters: List<EntryFilter>): Boolean {
         if (filter.className != null) if (filter.className == this.declaringClass.name) return true
     }
     return false
+}
+
+fun <R : Any> R.logger(): Lazy<Logger> = lazy {
+    return@lazy LoggerFactory
+        .getLogger((if (this.javaClass.kotlin.isCompanion) this.javaClass.enclosingClass else this.javaClass).name)
 }

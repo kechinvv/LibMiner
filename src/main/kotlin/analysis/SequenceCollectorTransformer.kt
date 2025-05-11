@@ -7,6 +7,7 @@ import org.kechinvv.entities.MethodData
 import org.kechinvv.storage.Storage
 import org.kechinvv.utils.foundLib
 import org.kechinvv.utils.isEntryPoint
+import org.kechinvv.utils.logger
 import soot.*
 import soot.Unit
 import soot.jimple.InvokeExpr
@@ -23,6 +24,10 @@ class SequenceCollectorTransformer(val lib: String, val storage: Storage, val co
     private var counter = 0
     private var stop = false
 
+    companion object {
+        val LOG by logger()
+    }
+
     override fun internalTransform(phaseName: String?, options: MutableMap<String, String>?) {
         val entryPoints = mutableListOf<SootMethod>()
         Scene.v().applicationClasses.forEach { klass ->
@@ -30,7 +35,7 @@ class SequenceCollectorTransformer(val lib: String, val storage: Storage, val co
                 if (it.isEntryPoint(emptyList())) entryPoints.add(it)
             }
         }
-        println("Entry points size: ${entryPoints.size}")
+        LOG.info("Entry points size: ${entryPoints.size}")
         Scene.v().entryPoints = entryPoints
         icfg = JimpleBasedInterproceduralCFG()
         //icfg.setIncludePhantomCallees(true)
@@ -38,16 +43,14 @@ class SequenceCollectorTransformer(val lib: String, val storage: Storage, val co
 
         entryPoints.forEach { mainMethod ->
             val startPoints = icfg.getStartPointsOf(mainMethod)
-            println("Entry Points are: ")
-            println(startPoints)
-
+            LOG.debug("Starting {}", startPoints)
             stop = false
             counter = 0
 
             startPoints.forEach { startPoint ->
                 graphTraverseLib(startPoint)
             }
-            println("Total traces analyzed = $counter")
+            LOG.info("Total traces analyzed = {}", counter)
         }
     }
 
@@ -63,7 +66,7 @@ class SequenceCollectorTransformer(val lib: String, val storage: Storage, val co
         if (currentSuccessors.size == 0 || ttl <= 0 || depth == 0) {
             if (ttl <= 0 || !isMethod) {
                 counter++
-                if (counter % 50000 == 0) println("Traces already analyzed... = $counter")
+                if (counter % 50000 == 0) LOG.info("Traces already analyzed... = {}", counter)
                 if (counter == configuration.traceLimit) stop = true
                 save(extracted)
             } else {

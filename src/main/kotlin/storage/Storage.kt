@@ -42,4 +42,54 @@ class Storage(dbName: String) {
 
     }
 
+    fun getTraceById(id: Int): String {
+//        val stmt = conn.prepareStatement("select json_data from sequences where id=?")
+//        stmt.setInt(1, id)
+//        val res = stmt.executeQuery()
+//        if (res.next()) {
+//            return res.getString("json_data")
+//        } else return null
+        return ""
+    }
+
+    fun getClasses(): HashSet<String> {
+//        val classes = hashSetOf<String>()
+//        val stmt = conn.createStatement()
+//        val res = stmt.executeQuery("select distinct class from sequences")
+//        while (res.next()) {
+//            val className = res.getString("class")
+//            classes.add(className)
+//        }
+//
+//        return classes
+        return HashSet()
+    }
+
+    fun getMethodsForClass(inputClass: String): HashSet<String> {
+//        val methodNames = HashSet<String>()
+//        val stmt = conn.prepareStatement("select method_name from methods where class=?")
+//        stmt.setString(1, inputClass)
+//        val res = stmt.executeQuery()
+//        while (res.next()) {
+//            val name = res.getString("method_name")
+//            methodNames.add(name)
+//        }
+//        return methodNames
+        return HashSet()
+    }
+
+    fun getTracesIdForClass(inputClass: String): HashSet<Int> {
+//        val idTraces = HashSet<Int>()
+//        val stmt = conn.prepareStatement("select id from sequences where class=?")
+//        stmt.setString(1, inputClass)
+//        val res = stmt.executeQuery()
+//        while (res.next()) {
+//            val id = res.getInt("id")
+//            idTraces.add(id)
+//        }
+//
+//        return idTraces
+        return HashSet()
+    }
+
 }

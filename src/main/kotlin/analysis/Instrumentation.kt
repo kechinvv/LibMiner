@@ -1,45 +1,77 @@
 package org.kechinvv.analysis
 
+import net.lingala.zip4j.ZipFile
 import soot.G
 import soot.PackManager
 import soot.Scene
-import soot.SootClass.SIGNATURES
 import soot.Transform
 import soot.options.Options
 import java.io.File
-import java.nio.file.Files
-import java.nio.file.Paths
-import java.nio.file.StandardCopyOption
+import java.nio.file.*
+import kotlin.io.path.ExperimentalPathApi
+import kotlin.io.path.deleteRecursively
 
 
 class Instrumentation {
-    fun runAnalyze(classpath: String, lib: String, outputDir: String, jar: Boolean): Boolean {
+    @OptIn(ExperimentalPathApi::class)
+    fun runAnalyze(programPath: Path, lib: String, outputDir: Path, jar: Boolean): Boolean {
         try {
-            init(lib)
+            G.reset()
             Options.v().set_prepend_classpath(true)
             Options.v().set_allow_phantom_refs(true)
-            Options.v().set_process_dir(listOf(classpath))
+            Options.v().set_process_dir(listOf(programPath.toString()))
             Options.v().set_output_jar(jar)
-            Options.v().set_output_dir(outputDir)
-            Options.v().set_java_version(11)
+            Options.v().set_output_dir(outputDir.toString())
+            Options.v().set_java_version(21)
 
             val javaPaths = File("javapaths.txt").readText().trim()
-            var classPaths = javaPaths.replace(Regex("(\n|\r|\r\n)"), File.pathSeparator)
-            classPaths += File.pathSeparator + classpath + File.pathSeparator
-
-            Files.copy(
-                Paths.get(this::class::class.java.getResource("/LibMinerInstrumentationHelper.class")!!.toURI()),
-                Paths.get(classpath, "LibMinerInstrumentationHelper.class"),
-                StandardCopyOption.REPLACE_EXISTING
+            val helperClass = Paths.get(
+                this::class::class.java.getResource(
+                    "/LibMinerInstrumentationHelper.class"
+                )!!.toURI()
             )
-            Options.v().set_soot_classpath(classPaths)
+
+            val sootClassPath = programPath.toString() + File.pathSeparator + javaPaths.replace(
+                Regex("(\n|\r|\r\n)"),
+                File.pathSeparator
+            )
+
+            if (jar) {
+                val jarFile = ZipFile(programPath.toFile())
+                val helperInZip = jarFile.getFileHeader(helperClass.fileName.toString())
+                if (helperInZip != null) {
+                    return true
+                }
+                jarFile.addFile(helperClass.toFile())
+                jarFile.extractFile("META-INF/", programPath.parent.toString())
 
 
-            Scene.v().addBasicClass("LibMinerInstrumentationHelper", SIGNATURES)
+            } else {
+                val targetHelper = programPath.resolve("LibMinerInstrumentationHelper.class")
+                if (Files.exists(targetHelper)) return true
+                Files.copy(
+                    helperClass,
+                    targetHelper,
+                    StandardCopyOption.REPLACE_EXISTING
+                )
+            }
+
+
+            Options.v().set_soot_classpath(sootClassPath)
+
             Scene.v().loadNecessaryClasses()
 
+            loadTransform(lib)
+
             PackManager.v().runPacks()
-            PackManager.v().writeOutput();
+            PackManager.v().writeOutput()
+
+            if (jar) {
+                val metainfSaved = programPath.parent.resolve("META-INF")
+                ZipFile(programPath.toFile()).addFolder(metainfSaved.toFile())
+                metainfSaved.deleteRecursively()
+            }
+
             return true
         } catch (e: Throwable) {
             e.printStackTrace()
@@ -47,8 +79,7 @@ class Instrumentation {
         }
     }
 
-    fun init(lib: String) {
-        G.reset()
+    fun loadTransform(lib: String) {
         if (!PackManager.v().hasPack("jtp.ihash")) PackManager.v().getPack("jtp")
             .add(
                 Transform(

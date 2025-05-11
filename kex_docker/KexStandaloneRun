@@ -1,0 +1,30 @@
+FROM archlinux:latest
+MAINTAINER Azat Abdullin <azat.aam@gmail.com>
+
+ARG version
+
+# install required packages
+USER root
+RUN pacman -Syu --noconfirm \
+	git \
+	wget \
+	unzip \
+	jdk17-openjdk \
+	maven \
+	python3
+
+# install kex scripts
+COPY kex-run.sh /usr/bin
+RUN chmod a+rwx /usr/bin/kex-run.sh
+
+# install kex 
+USER root
+RUN mkdir kex
+WORKDIR /home/kex
+RUN wget https://github.com/vorpal-research/kex/releases/download/$version/kex-$version.zip
+RUN unzip kex-$version.zip
+WORKDIR /home
+
+# prepare for run
+USER root
+ENTRYPOINT ["kex-run.sh"]

@@ -7,7 +7,10 @@ import soot.Scene
 import soot.Transform
 import soot.options.Options
 import java.io.File
-import java.nio.file.*
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.nio.file.StandardCopyOption
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.deleteRecursively
 
@@ -65,6 +68,9 @@ class Instrumentation {
 
             PackManager.v().runPacks()
             PackManager.v().writeOutput()
+            G.reset()
+            System.gc()
+            Thread.sleep(1000)
 
             if (jar) {
                 val metainfSaved = programPath.parent.resolve("META-INF")

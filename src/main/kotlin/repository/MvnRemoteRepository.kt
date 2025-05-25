@@ -11,10 +11,10 @@ import kotlin.io.path.notExists
 val GRADLE_TEMPLATE = Any::class::class.java.getResource("/build.gradle")!!.readText(Charsets.UTF_8)
 val TEMP_DIR: Path = Paths.get("temp-gradle-project")
 
-data class RemoteLib(val group: String, val name: String, val version: String) : RemoteRepository {
+data class MvnRemoteRepository(val group: String, val name: String, val version: String) : RemoteRepository {
     val LOG = Logger.getLogger(this.javaClass.name)
 
-    override fun cloneTo(outputDir: Path): LocalRepository? {
+    override fun cloneTo(outputDir: Path): AbstractLocalRepository? {
         TEMP_DIR.toFile().mkdirs();
 
         val buildScript = String.format(
@@ -45,7 +45,7 @@ data class RemoteLib(val group: String, val name: String, val version: String) :
                         val resDir = outputDir.resolve(group + "_" + name + "_" + version)
                         for (file in files) {
                             LOG.info("Resolved artifact: " + file.absolutePath)
-                            file.copyTo(resDir.resolve(file.name).toFile())
+                            file.copyTo(resDir.resolve(file.name).toFile(), true)
                         }
                         return JarLocalRepository(resDir.toFile())
                     }

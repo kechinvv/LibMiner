@@ -2,7 +2,6 @@ package org.kechinvv.repository
 
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import fj.data.Stream
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
@@ -10,10 +9,11 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 
 
-val SONATYPE_BODY_TEMPLATE = Any::class::class.java.getResource("/sonabody.json")!!.readText(Charsets.UTF_8)
+
 
 class MvnProjectSequence(val lib: String, val client: OkHttpClient) : Sequence<RemoteRepository> {
-    private val LinkSonatype = "https://central.sonatype.com/api/internal/browse/dependents"
+    private val linkSonatype = "https://central.sonatype.com/api/internal/browse/dependents"
+    private val sonatypeBodyTemplate = this::class.java.getResource("/sonabody.json")!!.readText(Charsets.UTF_8)
 
     private var page = 0
     private var searchTerm = Term()
@@ -21,7 +21,7 @@ class MvnProjectSequence(val lib: String, val client: OkHttpClient) : Sequence<R
     private val pageSize = 20
     private val maxPageCount = 500
 
-    var foundPageCount = 0
+    var foundPageCount = -1
 
     private val inner = generateSequence {
         if (endOfSearch()) null
@@ -56,8 +56,8 @@ class MvnProjectSequence(val lib: String, val client: OkHttpClient) : Sequence<R
     }
 
     private fun makeRequest(): JsonObject {
-        val queryUrlBuilder = LinkSonatype.toHttpUrl().newBuilder()
-        val body = String.format(SONATYPE_BODY_TEMPLATE, lib, page, pageSize, searchTerm)
+        val queryUrlBuilder = linkSonatype.toHttpUrl().newBuilder()
+        val body = String.format(sonatypeBodyTemplate, lib, page, pageSize, searchTerm)
             .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
         val request = Request.Builder()
             .url(queryUrlBuilder.build())
@@ -76,7 +76,7 @@ class MvnProjectSequence(val lib: String, val client: OkHttpClient) : Sequence<R
             val namespace = item.get("sourceNamespace").asString
             val name = item.get("sourceName").asString
             val version = item.get("sourceVersion").asString
-            res.add(RemoteLib(namespace, name, version))
+            res.add(MvnRemoteRepository(namespace, name, version))
         }
         return res
     }

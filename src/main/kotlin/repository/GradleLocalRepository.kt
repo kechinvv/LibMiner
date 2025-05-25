@@ -1,12 +1,10 @@
 package org.kechinvv.repository
 
 import org.gradle.tooling.GradleConnector
-import org.gradle.tooling.ProgressEvent
-import org.gradle.tooling.ProgressListener
 import org.kechinvv.config.Configuration
 import java.io.File
 
-class GradleLocalRepository(file: File, private val configuration: Configuration) : LocalRepository(file) {
+class GradleLocalRepository(file: File, private val configuration: Configuration) : AbstractLocalRepository(file), Buildable {
     private val connector = GradleConnector.newConnector()
 
     init {

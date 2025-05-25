@@ -17,14 +17,14 @@ import kotlin.io.path.Path
 import kotlin.io.path.notExists
 
 
-class RemoteGithub(var url: String, var name: String, val client: OkHttpClient, val token: String) :
+class GhRemoteRepository(var url: String, var name: String, val client: OkHttpClient, val configuration: Configuration) :
     RemoteRepository {
 
-    constructor(repoJSON: JsonObject, client: OkHttpClient, token: String) : this(
+    constructor(repoJSON: JsonObject, client: OkHttpClient, configuration: Configuration) : this(
         repoJSON.get("html_url").toString(),
         repoJSON.get("full_name").toString(),
         client,
-        token
+        configuration
     )
 
     init {
@@ -40,7 +40,7 @@ class RemoteGithub(var url: String, var name: String, val client: OkHttpClient, 
     fun getAssets(): String? {
         val request = Request.Builder()
             .url("https://api.github.com/repos/$name/releases/latest")
-            .addHeader("Authorization", "Bearer $token")
+            .addHeader("Authorization", "Bearer ${configuration.ghToken}")
             .addHeader("Accept", "application/vnd.github+json")
             .build()
         val response = client.newCall(request).execute().body?.string()
@@ -65,7 +65,7 @@ class RemoteGithub(var url: String, var name: String, val client: OkHttpClient, 
 
 
     @Throws(InterruptedException::class, IOException::class)
-    override fun cloneTo(outputDir: Path): LocalRepository {
+    override fun cloneTo(outputDir: Path): AbstractLocalRepository {
         val downloadURL = getAssets()
         if (downloadURL != null) {
             Files.createDirectories(outputDir)
@@ -90,7 +90,7 @@ class RemoteGithub(var url: String, var name: String, val client: OkHttpClient, 
                     .call().close()
             }
         }
-        return JarLocalRepository(outputDir.toFile())
+        return AbstractLocalRepository.getLocalRepository(outputDir.toFile(), configuration)
     }
 
     private fun unzip(zipFileName: String, destDirectory: String) {

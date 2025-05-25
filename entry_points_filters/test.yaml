@@ -1,4 +1,6 @@
-methodTags: ["Test"]
-methodName: null
+methodTags: []
+methodName: "main.*"
 classTags: []
 className: null
+kind: "public"
+args: ["java.lang.String[]"]

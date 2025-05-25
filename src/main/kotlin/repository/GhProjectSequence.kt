@@ -45,7 +45,7 @@ class GhProjectsSequence(val lib: String, val client: OkHttpClient, val configur
 
     private fun makeRequest(): String {
         val queryUrlBuilder = linkGH.toHttpUrl().newBuilder()
-            .addQueryParameter("q", "$lib in:file language:java size:$lbound..$rbound")
+            .addQueryParameter("q", "$lib in:file language:java path:**/*.java size:$lbound..$rbound")
             .addQueryParameter("per_page", "100")
             .addQueryParameter("page", page.toString())
         val request = Request.Builder()
@@ -72,7 +72,7 @@ class GhProjectsSequence(val lib: String, val client: OkHttpClient, val configur
                 nextBounds()
                 page = 1
             } else {
-                items.forEach { reps.add(RemoteGithub((it as JsonObject).get("repository") as JsonObject, client, configuration.ghToken)) }
+                items.forEach { reps.add(GhRemoteRepository((it as JsonObject).get("repository") as JsonObject, client, configuration)) }
                 total += reps.size
                 page++
             }

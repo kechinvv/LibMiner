@@ -29,27 +29,20 @@ class SequenceCollectorTransformer(val lib: String, val storage: Storage, val co
     }
 
     override fun internalTransform(phaseName: String?, options: MutableMap<String, String>?) {
-        val entryPoints = mutableListOf<SootMethod>()
-        Scene.v().applicationClasses.forEach { klass ->
-            klass.methods.forEach {
-                if (it.isEntryPoint(emptyList())) entryPoints.add(it)
-            }
-        }
-        LOG.info("Entry points size: ${entryPoints.size}")
-        Scene.v().entryPoints = entryPoints
+        Scene.v().entryPoints = mutableListOf<SootMethod>()
+        collectEntryPointsTo(Scene.v().entryPoints)
+
         icfg = JimpleBasedInterproceduralCFG()
         //icfg.setIncludePhantomCallees(true)
         analysis = Scene.v().pointsToAnalysis as PAG
 
-        entryPoints.forEach { mainMethod ->
+        Scene.v().entryPoints.forEach { mainMethod ->
             val startPoints = icfg.getStartPointsOf(mainMethod)
             LOG.debug("Starting {}", startPoints)
             stop = false
             counter = 0
 
-            startPoints.forEach { startPoint ->
-                graphTraverseLib(startPoint)
-            }
+            startPoints.forEach { startPoint -> graphTraverseLib(startPoint) }
             LOG.info("Total traces analyzed = {}", counter)
         }
     }
@@ -175,6 +168,15 @@ class SequenceCollectorTransformer(val lib: String, val storage: Storage, val co
 
     private fun getPointsToSet(inv: InvokeExpr): PointsToSet {
         return analysis.reachingObjects(inv.useBoxes[0].value as Local)
+    }
+
+    private fun collectEntryPointsTo(entryPoints: MutableCollection<SootMethod>) {
+        Scene.v().applicationClasses.forEach { klass ->
+            klass.methods.forEach {
+                if (it.isEntryPoint(emptyList())) entryPoints.add(it)
+            }
+        }
+        LOG.info("Entry points size: ${entryPoints.size}")
     }
 
 

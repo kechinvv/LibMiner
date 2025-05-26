@@ -37,7 +37,7 @@ class InstrumentationTransformer(val lib: String, val logPath: String) : BodyTra
             val generatedUnits: ArrayList<soot.Unit> = ArrayList()
 
             val methodData = MethodData.fromSootMethod(stmt.invokeExpr.method)
-            val invokeDataStr = Json.encodeToString(InvokeData(methodData, "%d", "%d")) + "\n"
+            val invokeDataStr = Json.encodeToString(InvokeData(methodData, "%d", "%d", "%s")) + "\n"
             val invokeDataStrConst = StringConstant.v(invokeDataStr)
 
             val metaVar = lg.generateLocal(RefType.v("java.lang.String"))

@@ -5,16 +5,16 @@ import soot.SootMethod
 
 
 @Serializable
-data class MethodData(val name: String, val args: List<String>, val isStatic: Boolean, val klass: String) {
+data class MethodData(val name: String, val args: List<String>, val returnType: String, val isStatic: Boolean, val klass: String) {
     companion object MethodParser {
         fun fromSootMethod(method: SootMethod): MethodData {
             val name = method.name
             val args = mutableListOf<String>()
             method.parameterTypes.forEach { type ->
-                val finType = type.defaultFinalType.toString()
-                args.add(finType)
+                args.add(type.toString())
             }
-            return MethodData(name, args, method.isStatic, method.declaringClass.toString())
+            val returnType = method.returnType.toString()
+            return MethodData(name, args, returnType, method.isStatic, method.declaringClass.toString())
         }
     }
 

@@ -35,7 +35,6 @@ class GradleLocalRepository(file: File, private val configuration: Configuration
             test.setStandardOutput(System.out)
             test.setStandardError(System.out)
             test.run()
-
         }
     }
 }

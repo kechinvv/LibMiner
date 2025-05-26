@@ -19,12 +19,13 @@ fun main() {
     val classpath_jar2 =
         Paths.get("C:\\Users\\valer\\IdeaProjects\\libminer_test\\build\\libs\\all-in-one-jar-1.0-SNAPSHOT.jar")
 
-    val classpath = "C:\\Users\\valer\\IdeaProjects\\libminer_test\\build\\classes\\java\\main"
+    val classpath = Paths.get("C:\\Users\\valer\\IdeaProjects\\libminer_test\\build\\classes\\java\\main")
     val mvn_classpath = "C:\\Users\\valer\\IdeaProjects\\libminer_mvtest\\target\\classes"
     val local = GradleLocalRepository(File("C:\\Users\\valer\\IdeaProjects\\libminer_test"), configuration)
-    //local.build()
+    local.build()
 
-    val i = Instrumentation().runAnalyze(classpath_jar2, "java", classpath_jar2, true)
+    val i = Instrumentation().runAnalyze(classpath, "java", classpath, false)
+    local.runTests()
 
 
 

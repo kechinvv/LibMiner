@@ -72,7 +72,7 @@ class SequenceCollectorTransformer(val lib: String, val storage: Storage, val co
                 var method: SootMethod? = null
                 var continueAdded = false
                 var klass: String? = null
-                var addedIndex: List<Int>? = null
+                var indexesOfChangedTraces: List<Int>? = null
                 try {
                     if (stop) return
                     if (succ is JInvokeStmt || succ is JAssignStmt) {
@@ -86,7 +86,7 @@ class SequenceCollectorTransformer(val lib: String, val storage: Storage, val co
                             else methodLib.declaringClass.toString()
 
                             if (extracted[klass] == null) extracted[klass] = mutableListOf()
-                            addedIndex = fillExtracted(succ.invokeExpr, extracted[klass]!!)
+                            indexesOfChangedTraces = saveInvokeToTrace(succ.invokeExpr, extracted[klass]!!)
                         }
                     }
                 } catch (_: Exception) {
@@ -99,25 +99,44 @@ class SequenceCollectorTransformer(val lib: String, val storage: Storage, val co
                     }
                 } else graphTraverseLib(succ, ttl - 1, isMethod, extracted, continueStack, depth)
 
-                if (addedIndex != null) confiscate(addedIndex, extracted[klass]!!)
+                if (indexesOfChangedTraces != null) resetTraces(indexesOfChangedTraces, extracted[klass]!!)
                 if (continueAdded) continueStack.removeLast()
             }
         }
     }
 
 
-    private fun fillExtracted(invoke: InvokeExpr, extractedKlass: MutableList<MutableList<InvokeExpr>>): List<Int> {
+    private fun saveInvokeToTrace(invoke: InvokeExpr, extractedKlass: MutableList<MutableList<InvokeExpr>>): List<Int> {
         return if (invoke.method.isStatic) {
             if (extractedKlass.size != 0) extractedKlass[0].add(invoke)
             else extractedKlass.add(mutableListOf(invoke))
             listOf(0)
         } else {
-            defaultExtracting(invoke, extractedKlass)
+            defaultSaveInvokeToTrace(invoke, extractedKlass)
         }
     }
 
-    private fun confiscate(indexes: List<Int>, extractedKlass: MutableList<MutableList<InvokeExpr>>) {
-        indexes.forEach { index ->
+    private fun defaultSaveInvokeToTrace(invoke: InvokeExpr, extractedKlass: MutableList<MutableList<InvokeExpr>>): List<Int> {
+        val obj1PT = getPointsToSet(invoke)
+        val indexes = mutableListOf<Int>()
+        var added = false
+        extractedKlass.forEachIndexed { index, it ->
+            val obj2PT = getPointsToSet(it.last())
+            if (obj1PT.hasNonEmptyIntersection(obj2PT)) {
+                it.add(invoke)
+                indexes.add(index)
+                added = true
+            }
+        }
+        return if (!added) {
+            extractedKlass.add(mutableListOf(invoke))
+            listOf(extractedKlass.lastIndex)
+        } else indexes
+    }
+
+
+    private fun resetTraces(indexesOfChangedTraces: List<Int>, extractedKlass: MutableList<MutableList<InvokeExpr>>) {
+        indexesOfChangedTraces.forEach { index ->
             extractedKlass[index].removeLast()
             if (extractedKlass[index].isEmpty()) extractedKlass.removeAt(index)
         }
@@ -147,23 +166,6 @@ class SequenceCollectorTransformer(val lib: String, val storage: Storage, val co
     }
 
 
-    private fun defaultExtracting(invoke: InvokeExpr, extractedKlass: MutableList<MutableList<InvokeExpr>>): List<Int> {
-        val obj1PT = getPointsToSet(invoke)
-        val indexes = mutableListOf<Int>()
-        var added = false
-        extractedKlass.forEachIndexed { index, it ->
-            val obj2PT = getPointsToSet(it.last())
-            if (obj1PT.hasNonEmptyIntersection(obj2PT)) {
-                it.add(invoke)
-                indexes.add(index)
-                added = true
-            }
-        }
-        return if (!added) {
-            extractedKlass.add(mutableListOf(invoke))
-            listOf(extractedKlass.lastIndex)
-        } else indexes
-    }
 
 
     private fun getPointsToSet(inv: InvokeExpr): PointsToSet {

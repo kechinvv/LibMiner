@@ -24,7 +24,7 @@ fun main() {
     val local = GradleLocalRepository(File("C:\\Users\\valer\\IdeaProjects\\libminer_test"), configuration)
     local.build()
 
-    val i = Instrumentation().runAnalyze(classpath, "java", classpath, false)
+    val i = Instrumentation().runAnalyze(classpath, "java.io.File", classpath, false)
     local.runTests()
 
 

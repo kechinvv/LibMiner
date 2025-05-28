@@ -17,6 +17,7 @@ data class EntryFilter(
     @Serializable(with = RegexSerializer::class) val className: Regex?,
     val kind: String?,
     val args: List<String>,
+    val returnType: String
 )
 
 class RegexSerializer : KSerializer<Regex> {

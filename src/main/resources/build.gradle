@@ -24,3 +24,8 @@ tasks.register('downloadJars') {
         }
     }
 }
+
+tasks.register('copyLibsToDir', Copy) {
+    from configurations.dependencyConfig
+    into "$buildDir/separateLibs"
+}

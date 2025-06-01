@@ -19,6 +19,8 @@ repositories {
 dependencies {
     testImplementation(kotlin("test"))
 
+    implementation("org.apache.commons:commons-compress:1.26.0")
+
     implementation("org.gradle:gradle-tooling-api:8.9")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
     implementation("com.charleskorn.kaml:kaml:0.74.0")
@@ -28,7 +30,8 @@ dependencies {
     implementation("com.google.code.gson:gson:2.10.1")
     implementation("com.squareup.okhttp3:okhttp:5.0.0-alpha.14")
     implementation("org.eclipse.jgit:org.eclipse.jgit:7.1.0.202411261347-r")
-    implementation("net.lingala.zip4j:zip4j:2.11.5")
+    implementation("net.lingala.zip4j:zip4j:2.11.5") //todo: rewrite usages and remove
+
 
     implementation("org.soot-oss:soot:4.6.0")
 

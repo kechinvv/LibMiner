@@ -1,6 +1,5 @@
 package org.kechinvv.entities
 
-import kotlinx.serialization.Contextual
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -11,13 +10,15 @@ import kotlinx.serialization.encoding.Encoder
 
 @Serializable
 data class EntryFilter(
-    val methodAnnotation: Set<String>,
+    val methodAnnotation: Set<String>?,
     @Serializable(with = RegexSerializer::class) val methodName: Regex?,
-    val classAnnotation: Set<String>,
+    val classAnnotation: Set<String>?,
     @Serializable(with = RegexSerializer::class) val className: Regex?,
-    val kind: String?,
-    val args: List<String>,
-    val returnType: String
+    val args: List<String>?,
+    val returnType: String?,
+    val kind: String?, //init, clinit, method
+    val methodModifiers: Set<String>?, //static, public, protected, private, final, synchronized
+    val classModifiers: Set<String>?,
 )
 
 class RegexSerializer : KSerializer<Regex> {

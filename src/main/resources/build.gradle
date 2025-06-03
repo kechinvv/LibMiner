@@ -17,14 +17,6 @@ dependencies {
     dependencyConfig '%s:%s:%s'
 }
 
-tasks.register('downloadJars') {
-    doLast {
-        configurations.dependencyConfig.resolve().each { File file ->
-            println "Resolved JAR: ${file.absolutePath}"
-        }
-    }
-}
-
 tasks.register('copyLibsToDir', Copy) {
     from configurations.dependencyConfig
     into "$buildDir/separateLibs"

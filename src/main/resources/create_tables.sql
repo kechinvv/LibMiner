@@ -1,16 +1,29 @@
 create table if not exists
     sequence(id integer primary key,
-              json_data string,
-              class string,
-              samples integer);
+              trace text,
+              class text,
+              is_static boolean,
+              samples integer,
+              UNIQUE(trace, class)
+);
 
 create table if not exists
     method(id integer primary key,
-            name string,
-            class string,
-            UNIQUE(method_name,class));
+            method_name text,
+            args text,
+            return_type text,
+            class text,
+            is_static boolean,
+            UNIQUE(method_name, class, args)
+);
 
 create table if not exists
     repository(id integer primary key,
-                name string,
-                source string);
+                repo_name text,
+                namespace text,
+                version text,
+                author text,
+                locator text unique,
+                source text,
+                date datetime
+);

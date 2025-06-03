@@ -1,6 +1,5 @@
 package org.kechinvv.analysis
 
-import com.google.gson.GsonBuilder
 import kotlinx.serialization.json.Json
 import org.kechinvv.config.Configuration
 import org.kechinvv.entities.MethodData
@@ -49,18 +48,18 @@ class SequenceCollectorTransformer(val lib: String, val storage: Storage, val co
 
     fun graphTraverseLib(
         startPoint: Unit,
-        ttl: Int = configuration.traversJumps,
-        isMethod: Boolean = false,
+        ttl: Int = configuration.traversLength,
+        isMainMethod: Boolean = true,
         extracted: HashMap<String, MutableList<MutableList<InvokeExpr>>> = HashMap(),
         continueStack: ArrayDeque<Pair<Unit, Boolean>> = ArrayDeque(),
         depth: Int = configuration.traversDepth
     ) {
         val currentSuccessors = icfg.getSuccsOf(startPoint)
-        if (currentSuccessors.size == 0 || ttl <= 0 || depth == 0) {
-            if (ttl <= 0 || !isMethod) {
+        if (currentSuccessors.size == 0 || ttl <= 0) {
+            if (ttl <= 0 || isMainMethod) {
                 counter++
                 if (counter % 50000 == 0) LOG.info("Traces already analyzed... = {}", counter)
-                if (counter == configuration.traceLimit) stop = true
+                if (counter == configuration.traceCount) stop = true
                 save(extracted)
             } else {
                 val succInfo = continueStack.removeLast()
@@ -80,24 +79,20 @@ class SequenceCollectorTransformer(val lib: String, val storage: Storage, val co
                         if (succ.invokeExpr.method.declaringClass in Scene.v().applicationClasses)
                             method = succ.invokeExpr.method
                         if (method?.foundLib(lib) == true) {
-                            storage.saveMethod(succ.invokeExpr.method, configuration.traceNode)
                             val methodLib = succ.invokeExpr.method
-                            klass = if (methodLib.isStatic) "${methodLib.declaringClass}__s"
-                            else methodLib.declaringClass.toString()
-
+                            klass = methodLib.declaringClass.toString()
                             if (extracted[klass] == null) extracted[klass] = mutableListOf()
                             indexesOfChangedTraces = saveInvokeToTrace(succ.invokeExpr, extracted[klass]!!)
                         }
                     }
                 } catch (_: Exception) {
                 }
-                if (method != null && method.declaringClass in Scene.v().applicationClasses) {
-                    continueStack.add(Pair(succ, isMethod))
-                    continueAdded = true
+                if (method != null && depth > 0) {
+                    continueAdded = continueStack.add(Pair(succ, isMainMethod))
                     icfg.getStartPointsOf(method).forEach { methodStart ->
-                        graphTraverseLib(methodStart, ttl - 1, true, extracted, continueStack, depth - 1)
+                        graphTraverseLib(methodStart, ttl - 1, false, extracted, continueStack, depth - 1)
                     }
-                } else graphTraverseLib(succ, ttl - 1, isMethod, extracted, continueStack, depth)
+                } else graphTraverseLib(succ, ttl - 1, isMainMethod, extracted, continueStack, depth)
 
                 if (indexesOfChangedTraces != null) resetTraces(indexesOfChangedTraces, extracted[klass]!!)
                 if (continueAdded) continueStack.removeLast()
@@ -105,18 +100,24 @@ class SequenceCollectorTransformer(val lib: String, val storage: Storage, val co
         }
     }
 
+    // return indexes for pop after trace finish
+    private fun saveInvokeToTrace(invoke: InvokeExpr, tracesForClass: MutableList<MutableList<InvokeExpr>>): List<Int> {
+        //static traces reserved place
+        if (tracesForClass.size == 0) tracesForClass.add(mutableListOf())
 
-    private fun saveInvokeToTrace(invoke: InvokeExpr, extractedKlass: MutableList<MutableList<InvokeExpr>>): List<Int> {
         return if (invoke.method.isStatic) {
-            if (extractedKlass.size != 0) extractedKlass[0].add(invoke)
-            else extractedKlass.add(mutableListOf(invoke))
+            tracesForClass[0].add(invoke)
             listOf(0)
         } else {
-            defaultSaveInvokeToTrace(invoke, extractedKlass)
+            defaultSaveInvokeToTrace(invoke, tracesForClass)
         }
     }
 
-    private fun defaultSaveInvokeToTrace(invoke: InvokeExpr, extractedKlass: MutableList<MutableList<InvokeExpr>>): List<Int> {
+    // return indexes for pop after trace finish
+    private fun defaultSaveInvokeToTrace(
+        invoke: InvokeExpr,
+        extractedKlass: MutableList<MutableList<InvokeExpr>>
+    ): List<Int> {
         val obj1PT = getPointsToSet(invoke)
         val indexes = mutableListOf<Int>()
         var added = false
@@ -124,8 +125,7 @@ class SequenceCollectorTransformer(val lib: String, val storage: Storage, val co
             val obj2PT = getPointsToSet(it.last())
             if (obj1PT.hasNonEmptyIntersection(obj2PT)) {
                 it.add(invoke)
-                indexes.add(index)
-                added = true
+                added = indexes.add(index)
             }
         }
         return if (!added) {
@@ -143,33 +143,19 @@ class SequenceCollectorTransformer(val lib: String, val storage: Storage, val co
     }
 
     private fun save(extracted: HashMap<String, MutableList<MutableList<InvokeExpr>>>) {
-        extracted.forEach { (key, value) ->
-            value.forEach inner@{ trace ->
-                if (trace.size == 0) return@inner
-                var tempTrace = mutableListOf<InvokeExpr>()
-                trace.forEach { invokeGlob ->
-                    if (invokeGlob.method.name == "<init>" || invokeGlob == trace.last()) {
-                        if (invokeGlob.method.name != "<init>") tempTrace.add(invokeGlob)
-                        if (tempTrace.isNotEmpty()) {
-                            val jsonData = GsonBuilder().disableHtmlEscaping().create().toJson(tempTrace.map { invoke ->
-                                val methodData = MethodData.fromSootMethod(invoke.method)
-                                Json.encodeToString(methodData)
-                            })
-                            val inputClass = if (key.endsWith("__s")) key.dropLast(3) else key
-                            storage.saveTrace(jsonData!!, inputClass)
-                        }
-                        tempTrace = mutableListOf(invokeGlob)
-                    } else tempTrace.add(invokeGlob)
-                }
+        extracted.forEach { (klass, tracesInvokeExpr) ->
+            tracesInvokeExpr.forEach inner@{ traceInvokeExpr ->
+                if (traceInvokeExpr.size == 0) return@inner
+                val traceMethodData = traceInvokeExpr.map { MethodData.fromSootMethod(it.method) }
+                storage.saveTrace(Json.encodeToString(traceMethodData), klass, traceInvokeExpr.first().method.isStatic)
+                //save possible methods for MINT
+                //traceMethodData.distinct().forEach(storage::saveMethod)
             }
         }
     }
 
-
-
-
     private fun getPointsToSet(inv: InvokeExpr): PointsToSet {
-        return analysis.reachingObjects(inv.useBoxes[0].value as Local)
+        return this.analysis.reachingObjects(inv.useBoxes[0].value as Local)
     }
 
     private fun collectEntryPointsTo(entryPoints: MutableCollection<SootMethod>) {
@@ -180,6 +166,9 @@ class SequenceCollectorTransformer(val lib: String, val storage: Storage, val co
         }
         LOG.info("Entry points size: ${entryPoints.size}")
     }
-
-
 }
+
+
+
+
+

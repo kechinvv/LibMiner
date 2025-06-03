@@ -1,30 +1,52 @@
 package org.kechinvv.config
 
-import config.TraceNode
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class Configuration(
-    val libName: String,
-    val ghToken: String,
+class Configuration {
+    var ghQuerySearch: String = ""
+    var ghLanguageSearch: String = ""
+    var ghToken: String = ""
+    var onlyWithJars: Boolean = false
+    var useGh: Boolean = true
 
-    val mavenPath: String,
-    val gradlePath: String,
-    val gradleVersion: String,
+    var targetLibGroup: String = ""
+    var targetLibName: String = ""
+    var targetLibVersion: String = ""
+    var useMvn: Boolean = true
 
-    val workdir: String,
+    // qualified package or class
+    var targetLibExtractingUnit: String = ""
 
-    val kAlg: Int,
-    val goal: Int,
+    var mavenPathOrEnvVar: String = "mvn"
 
-    val allProj: Boolean,
+    // Auto get necessary gradle for every project if null or
+    // Installed gradle (optional)
+    var gradlePath: String? = null
 
-    val traversJumps: Int,
-    val traversDepth: Int,
-    val traceLimit: Int,
-    val traceNode: TraceNode,
-    val unionEnd: Boolean,
-    val toJson: Boolean,
+    // Version for downloaded gradle (optional)
+    var gradleVersion: String? = null
 
-    val saveDb: Boolean
-)
+    // 0 - limitless
+    var countOfProjects: Int = 0
+
+    var workdir: String = "."
+    var sourceDB: String? = null
+
+    // fuzzing limits
+    var fuzzingExecutions: Int = 100
+    var fuzzingTimeInSeconds: Int = 100
+
+    // static extracting
+    var traversLength: Int = 1000
+    var traversDepth: Int = 6
+    var traceCount: Int = 1000000
+
+    // inference
+    var useSignature: Boolean = false
+    var unionEnd: Boolean = true
+    var toJson: Boolean = true
+
+    // k for merging
+    var kTail: Int = 2
+}

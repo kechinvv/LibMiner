@@ -5,7 +5,13 @@ import soot.SootMethod
 
 
 @Serializable
-data class MethodData(val name: String, val args: List<String>, val returnType: String, val isStatic: Boolean, val klass: String) {
+data class MethodData(
+    val name: String,
+    val args: List<String>,
+    val returnType: String,
+    val isStatic: Boolean,
+    val klass: String
+) {
     companion object MethodParser {
         fun fromSootMethod(method: SootMethod): MethodData {
             val name = method.name
@@ -19,6 +25,6 @@ data class MethodData(val name: String, val args: List<String>, val returnType: 
     }
 
     fun getSignature(): String {
-        return "${name}(${args.joinToString(", ")})"
+        return "${name}(${args.joinToString(",")})$returnType".replace(" ", "")
     }
 }

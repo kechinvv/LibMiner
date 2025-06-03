@@ -1,6 +1,5 @@
 package org.kechinvv.inference
 
-import config.TraceNode
 import guru.nidi.graphviz.attribute.Attributes
 import guru.nidi.graphviz.attribute.Label
 import guru.nidi.graphviz.engine.Format
@@ -18,7 +17,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 
-const val initial = "initial"
+const val initial = "<init>"
 const val finish = "doublecircle"
 
 class FSM(val info: String, edgesDot: Collection<Link>, nodesDot: Collection<MutableNode>, val configuration: Configuration) {
@@ -89,7 +88,7 @@ class FSM(val info: String, edgesDot: Collection<Link>, nodesDot: Collection<Mut
     fun toJson(filePath: Path) {
         val `class` = if (info.endsWith("__s")) info.dropLast(3)
         else info
-        val automaton = Automaton(info, `class`, shifts, states, configuration.traceNode == TraceNode.SIGNATURE)
+        val automaton = Automaton(info, `class`, shifts, states, configuration.useSignature)
         val strJson = json.encodeToString(automaton)
         Files.deleteIfExists(filePath)
         Files.write(

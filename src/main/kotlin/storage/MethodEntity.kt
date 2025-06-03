@@ -1,11 +1,12 @@
 package org.kechinvv.storage
 
-import org.ktorm.schema.Table
-import org.ktorm.schema.int
-import org.ktorm.schema.varchar
+import org.ktorm.schema.*
 
 object MethodEntity : Table<Nothing>("method") {
     val id = int("id").primaryKey()
-    val name = varchar("name")
+    val name = varchar("method_name")
+    val args = varchar("args")
+    val returnType = varchar("return_type")
     val klass = varchar("class")
+    val isStatic = boolean("is_static")
 }

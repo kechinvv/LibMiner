@@ -33,7 +33,7 @@ data class MvnRemoteRepository(val group: String, val name: String, val version:
             .forProjectDirectory(TEMP_DIR.toFile())
             .connect().use { connection ->
                 connection.newBuild()
-                    .forTasks("downloadJars")
+                    .forTasks("copyLibsToDir")
                     .run()
 
                 val gradleHome = File(System.getProperty("user.home"), ".gradle")

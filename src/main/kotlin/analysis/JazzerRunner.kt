@@ -1,5 +1,6 @@
 package org.kechinvv.analysis
 
+import org.kechinvv.config.Configuration
 import org.kechinvv.utils.JazzerDownloader
 import java.io.File
 import java.nio.file.Files
@@ -8,7 +9,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.io.path.absolute
 import kotlin.io.path.extension
 
-class JazzerRunner {
+class JazzerRunner(val fuzzingExecutions: Int, val fuzzingTimeInSeconds: Int) {
     private val jazzerExecutor: Path = JazzerDownloader().getOrDownload().absolute()
 
     fun run(classpathDirs: List<Path>, targetMethod: String) {
@@ -19,8 +20,8 @@ class JazzerRunner {
             jazzerExecutor.toString(),
             "--cp=\"$jazzerCpArg\"",
             "--keep_going=0",
-            "-runs=100",
-            "-max_total_time=60",
+            "-runs=$fuzzingExecutions",
+            "-max_total_time=$fuzzingTimeInSeconds",
             "--autofuzz=$targetMethod"
         )
 

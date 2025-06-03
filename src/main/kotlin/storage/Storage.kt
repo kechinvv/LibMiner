@@ -1,12 +1,13 @@
 package org.kechinvv.storage
 
-import config.TraceNode
+import kotlinx.serialization.json.Json
 import org.kechinvv.entities.MethodData
+import org.kechinvv.holders.TraceHolder
 import org.ktorm.database.Database
-import org.ktorm.dsl.insert
+import org.ktorm.dsl.*
 import org.ktorm.support.sqlite.SQLiteDialect
 import org.ktorm.support.sqlite.insertOrUpdate
-import soot.SootMethod
+import java.io.FileNotFoundException
 
 class Storage(dbName: String) {
 
@@ -21,36 +22,35 @@ class Storage(dbName: String) {
         database.useConnection { conn ->
             conn.createStatement().use { statement ->
                 val script = javaClass.classLoader.getResource("create_tables.sql")?.readText()
-                    ?: throw Exception("could not find init script")
+                    ?: throw FileNotFoundException("could not find init script")
                 statement.executeUpdate(script)
             }
         }
     }
 
-    fun saveMethod(method: SootMethod, detail: TraceNode) {
-        val methodData = MethodData.fromSootMethod(method)
-        val klass = method.declaringClass.toString()
-        val name = if (detail == TraceNode.NAME) methodData.name else methodData.getSignature()
+    fun saveMethod(method: MethodData) {
         database.insertOrUpdate(MethodEntity) {
-            set(it.name, name)
-            set(it.klass, klass)
+            set(it.name, method.name)
+            set(it.args, Json.encodeToString(method.args))
+            set(it.returnType, method.returnType)
+            set(it.klass, method.klass)
+            set(it.isStatic, method.isStatic)
             onConflict { doNothing() }
         }
     }
 
-    fun saveTrace(inputData: String, inputClass: String, inputCount: Int = 1) {
-
+    fun saveTrace(trace: String, inputClass: String, isStatic: Boolean) {
+        database.insertOrUpdate(SequenceEntity) {
+            set(it.trace, trace)
+            set(it.klass, inputClass)
+            set(it.isStatic, isStatic)
+            set(it.count, 1)
+            onConflict {
+                set(it.count, it.count.plus(1))
+            }
+        }
     }
 
-    fun getTraceById(id: Int): String {
-//        val stmt = conn.prepareStatement("select json_data from sequences where id=?")
-//        stmt.setInt(1, id)
-//        val res = stmt.executeQuery()
-//        if (res.next()) {
-//            return res.getString("json_data")
-//        } else return null
-        return ""
-    }
 
     fun getClasses(): HashSet<String> {
 //        val classes = hashSetOf<String>()
@@ -65,31 +65,37 @@ class Storage(dbName: String) {
         return HashSet()
     }
 
-    fun getMethodsForClass(inputClass: String): HashSet<String> {
-//        val methodNames = HashSet<String>()
-//        val stmt = conn.prepareStatement("select method_name from methods where class=?")
-//        stmt.setString(1, inputClass)
-//        val res = stmt.executeQuery()
-//        while (res.next()) {
-//            val name = res.getString("method_name")
-//            methodNames.add(name)
-//        }
-//        return methodNames
-        return HashSet()
+    fun getMethodsForClass(inputClass: String, isStatic: Boolean): HashSet<MethodData> {
+        val methodsQuery = database.from(MethodEntity).select()
+            .where(MethodEntity.klass.eq(inputClass).and(MethodEntity.isStatic.eq(isStatic)))
+        val result = HashSet<MethodData>()
+        methodsQuery.forEach {
+            result.add(
+                MethodData(
+                    it[MethodEntity.klass]!!,
+                    Json.decodeFromString(it[MethodEntity.args]!!),
+                    it[MethodEntity.returnType]!!,
+                    it[MethodEntity.isStatic]!!,
+                    it[MethodEntity.klass]!!
+                )
+            )
+        }
+        return result
     }
 
-    fun getTracesIdForClass(inputClass: String): HashSet<Int> {
-//        val idTraces = HashSet<Int>()
-//        val stmt = conn.prepareStatement("select id from sequences where class=?")
-//        stmt.setString(1, inputClass)
-//        val res = stmt.executeQuery()
-//        while (res.next()) {
-//            val id = res.getInt("id")
-//            idTraces.add(id)
-//        }
-//
-//        return idTraces
-        return HashSet()
+    fun getTracesForClass(klass: String, isStatic: Boolean): HashSet<TraceHolder> {
+        val tracesQuery = database.from(SequenceEntity).select(SequenceEntity.trace, SequenceEntity.count)
+            .where(SequenceEntity.klass.eq(klass).and(SequenceEntity.isStatic.eq(isStatic)))
+        val result = HashSet<TraceHolder>()
+        tracesQuery.forEach { sequenceRaw ->
+            result.add(
+                TraceHolder(
+                    Json.decodeFromString(sequenceRaw[SequenceEntity.trace]!!),
+                    sequenceRaw[SequenceEntity.count]!!
+                )
+            )
+        }
+        return result
     }
 
 }

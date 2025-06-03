@@ -17,7 +17,7 @@ data class EntryFilter(
     val args: List<String>?,
     val returnType: String?,
     val kind: String?, //init, clinit, method
-    val methodModifiers: Set<String>?, //static, public, protected, private, final, synchronized
+    val methodModifiers: Set<String>?, //static, public, protected, private, final, synchronized, native
     val classModifiers: Set<String>?,
 )
 

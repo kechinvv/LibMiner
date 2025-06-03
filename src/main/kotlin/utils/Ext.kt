@@ -28,7 +28,7 @@ fun SootMethod.isEntryPoint(filters: List<EntryFilter>): Boolean {
                 (f.returnType == null || this.returnType.toString() == f.returnType) &&
                 (checkArgs(f.args, this)) &&
                 (methodModifiersCheck(f.methodModifiers, this)) &&
-                (klassModifiersCheck(f.classModifiers, this.declaringClass))
+                (classModifiersCheck(f.classModifiers, this.declaringClass))
         if (!match) return false
     }
 
@@ -58,33 +58,28 @@ private fun checkArgs(args: List<String>?, method: SootMethod): Boolean {
 
 private fun methodModifiersCheck(modifiers: Set<String>?, target: SootMethod): Boolean {
     if (modifiers == null) return true
-    for (modifier in modifiers) {
-        when (modifier) {
-            "public" -> if (!target.isPublic) return false
-            "private" -> if (!target.isPrivate) return false
-            "protected" -> if (!target.isProtected) return false
-            "static" -> if (!target.isStatic) return false
-            "final" -> if (!target.isFinal) return false
-            "synchronized" -> if (!target.isSynchronized) return false
-        }
-    }
-    return false
+    val methodModifiers = HashSet<String>()
+    if (target.isPublic) methodModifiers.add("public")
+    if (target.isProtected) methodModifiers.add("protected")
+    if (target.isPrivate) methodModifiers.add("private")
+    if (target.isStatic) methodModifiers.add("static")
+    if (target.isFinal) methodModifiers.add("final")
+    if (target.isSynchronized) methodModifiers.add("synchronized")
+    if (target.isNative) methodModifiers.add("native")
+    return methodModifiers == modifiers
 }
 
-private fun klassModifiersCheck(modifiers: Set<String>?, target: SootClass): Boolean {
+private fun classModifiersCheck(modifiers: Set<String>?, target: SootClass): Boolean {
     if (modifiers == null) return true
-    for (modifier in modifiers) {
-        when (modifier) {
-            "public" -> if (!target.isPublic) return false
-            "private" -> if (!target.isPrivate) return false
-            "protected" -> if (!target.isProtected) return false
-            "static" -> if (!target.isStatic) return false
-            "final" -> if (!target.isFinal) return false
-            "synchronized" -> if (!target.isSynchronized) return false
-            "enum" -> if (!target.isEnum) return false
-        }
-    }
-    return false
+    val classModifiers = HashSet<String>()
+    if (target.isPublic) classModifiers.add("public")
+    if (target.isProtected) classModifiers.add("protected")
+    if (target.isPrivate) classModifiers.add("private")
+    if (target.isStatic) classModifiers.add("static")
+    if (target.isFinal) classModifiers.add("final")
+    if (target.isSynchronized) classModifiers.add("synchronized")
+    if (target.isEnum) classModifiers.add("enum")
+    return classModifiers == modifiers
 }
 
 fun <R : Any> R.logger(): Lazy<Logger> = lazy {

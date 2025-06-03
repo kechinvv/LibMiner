@@ -4,5 +4,5 @@ import java.nio.file.Path
 
 interface RemoteRepository {
 
-    fun cloneTo(outputDir: Path): AbstractLocalRepository?
+    fun cloneTo(outputDir: Path): AbstractLocalRepository
 }

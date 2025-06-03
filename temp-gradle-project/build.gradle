@@ -14,10 +14,10 @@ configurations {
 }
 
 dependencies {
-    dependencyConfig '%s:%s:%s'
+    dependencyConfig "${libgroup}:${libname}:${libversion}"
 }
 
 tasks.register('copyLibsToDir', Copy) {
     from configurations.dependencyConfig
-    into "$buildDir/separateLibs"
+    into "$libdir"
 }

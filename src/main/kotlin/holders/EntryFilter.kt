@@ -10,9 +10,9 @@ import kotlinx.serialization.encoding.Encoder
 
 @Serializable
 data class EntryFilter(
-    val methodAnnotation: Set<String>?,
+    val methodAnnotations: Set<String>?,
     @Serializable(with = RegexSerializer::class) val methodName: Regex?,
-    val classAnnotation: Set<String>?,
+    val classAnnotations: Set<String>?,
     @Serializable(with = RegexSerializer::class) val className: Regex?,
     val args: List<String>?,
     val returnType: String?,

@@ -8,8 +8,9 @@ object RepositoryEntity : Table<Nothing>("repository") {
     val namespace = varchar("namespace")
     val version = varchar("version")
     val author = varchar("author")
-    val locator = varchar("locator")
+    val url = varchar("url")
     val source = varchar("source")
+    val path = varchar("path")
     val date = datetime("date")
 }
 

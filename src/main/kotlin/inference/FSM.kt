@@ -86,8 +86,7 @@ class FSM(val info: String, edgesDot: Collection<Link>, nodesDot: Collection<Mut
     }
 
     fun toJson(filePath: Path) {
-        val `class` = if (info.endsWith("__s")) info.dropLast(3)
-        else info
+        val `class` = info
         val automaton = Automaton(info, `class`, shifts, states, configuration.useSignature)
         val strJson = json.encodeToString(automaton)
         Files.deleteIfExists(filePath)

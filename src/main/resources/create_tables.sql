@@ -2,20 +2,11 @@ create table if not exists
     sequence(id integer primary key,
               trace text,
               class text,
-              is_static boolean,
               samples integer,
+              extract_method text,
               UNIQUE(trace, class)
 );
 
-create table if not exists
-    method(id integer primary key,
-            method_name text,
-            args text,
-            return_type text,
-            class text,
-            is_static boolean,
-            UNIQUE(method_name, class, args)
-);
 
 create table if not exists
     repository(id integer primary key,
@@ -23,7 +14,9 @@ create table if not exists
                 namespace text,
                 version text,
                 author text,
-                locator text unique,
+                url text unique,
                 source text,
+                path text,
                 date datetime
 );
+

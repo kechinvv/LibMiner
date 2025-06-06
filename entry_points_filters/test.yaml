@@ -1,6 +1,6 @@
-methodTags: ["API"]
+methodAnnotations: ["API"]
 methodName: "main.*"
-classTags: null
+classAnnotations: null
 className: null
 kind: "method"
 returnType: null

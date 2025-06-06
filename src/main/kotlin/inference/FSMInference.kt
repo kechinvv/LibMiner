@@ -25,18 +25,17 @@ class FSMInference(
     fun inferenceAll(toJson: Boolean = configuration.toJson, unionEnd: Boolean = configuration.unionEnd) {
         val klasses = storage.getClasses()
         klasses.forEach {
-            inferenceByClass(it, false, toJson, unionEnd)
-            inferenceByClass(it, true, toJson, unionEnd)
+            inferenceByClass(it, toJson, unionEnd)
+            inferenceByClass(it, toJson, unionEnd)
         }
     }
 
     fun inferenceByClass(
         klass: String,
-        staticCalls: Boolean,
         toJson: Boolean = true,
         unionEnd: Boolean = configuration.unionEnd
     ) {
-        val traces = storage.getTracesForClass(klass, staticCalls)
+        val traces = storage.getTracesForClass(klass)
         //val methods = storage.getMethodsForClass(klass, staticCalls)
         val methods = traces.flatMap { traceHolder -> traceHolder.trace }.toHashSet()
         val klassStr = klass.replace(".", "+")
@@ -59,7 +58,7 @@ class FSMInference(
         if (toJson) fsm.toJson(filePathOut)
     }
 
-    fun inferenceFSM(pathIn: String, pathOut: String, k: Int = configuration.kTail) {
+    fun inferenceFSM(pathIn: String, pathOut: String, k: Int = configuration.kTail, strategy: String = "ktails") {
         Files.createDirectories(Paths.get(jsonAndDotFilesPath))
         Mint.main(
             arrayOf(
@@ -68,7 +67,7 @@ class FSMInference(
                 "-k",
                 k.toString(),
                 "-strategy",
-                "ktails",
+                strategy,
                 "-visout",
                 pathOut
             )
@@ -103,7 +102,7 @@ class FSMInference(
                 val methodText = if (configuration.useSignature) methodData.getSignature() else methodData.name
                 Files.write(
                     filePath,
-                    listOf(methodData.name),
+                    listOf(methodText),
                     StandardCharsets.UTF_8,
                     StandardOpenOption.APPEND
                 )

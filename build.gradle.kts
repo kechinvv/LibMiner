@@ -1,13 +1,11 @@
 plugins {
-    kotlin("jvm") version "2.0.20"
-    kotlin("plugin.serialization") version "2.0.20"
+    kotlin("jvm") version "2.1.21"
+    kotlin("plugin.serialization") version "2.1.21"
 }
 
 group = "org.kechinvv"
 version = "1.0-SNAPSHOT"
 
-val aetherVersion = "1.1.0"
-val mavenVersion = "3.3.9"
 
 repositories {
     mavenCentral()
@@ -52,5 +50,5 @@ tasks.test {
     useJUnitPlatform()
 }
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
 }

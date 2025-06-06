@@ -13,7 +13,12 @@ import kotlin.io.path.notExists
 
 val TEMP_DIR = Paths.get("./temp-gradle-project").createDirectories().toFile()
 
-data class MvnRemoteRepository(val group: String, val name: String, val version: String) : RemoteRepository {
+data class MvnRemoteRepository(
+    val group: String,
+    override val name: String,
+    val version: String,
+    override val url: String = "pkg:maven/$group/$name@$version"
+) : RemoteRepository {
     companion object {
         val LOG by logger()
     }

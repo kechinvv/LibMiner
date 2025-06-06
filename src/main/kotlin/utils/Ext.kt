@@ -22,8 +22,8 @@ fun SootMethod.isEntryPoint(filters: List<EntryFilter>): Boolean {
     filters.forEach { f ->
         val match = (f.methodName == null || f.methodName.matches(this.name)) &&
                 (f.className == null || f.className.matches(this.declaringClass.name)) &&
-                (annotationCheck(f.methodAnnotation, this)) &&
-                (annotationCheck(f.classAnnotation, this.declaringClass)) &&
+                (annotationCheck(f.methodAnnotations, this)) &&
+                (annotationCheck(f.classAnnotations, this.declaringClass)) &&
                 (kindCheck(f.kind, this)) &&
                 (f.returnType == null || this.returnType.toString() == f.returnType) &&
                 (checkArgs(f.args, this)) &&

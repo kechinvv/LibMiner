@@ -131,7 +131,7 @@ class SequenceCollectorTransformer(val lib: String, val storage: Storage, val co
             tracesInvokeExpr.forEach inner@{ traceInvokeExpr ->
                 if (traceInvokeExpr.size == 0) return@inner
                 val traceMethodData = traceInvokeExpr.map { MethodData.fromSootMethod(it.invokeExpr.method) }
-                storage.saveTrace(Json.encodeToString(traceMethodData), klass, ExtractMethod.STATIC)
+                storage.saveTrace(traceMethodData, klass, ExtractMethod.STATIC)
             }
         }
     }

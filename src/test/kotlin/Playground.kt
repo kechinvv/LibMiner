@@ -18,8 +18,8 @@ class Playground {
         val seq = MvnProjectSequence("com.squareup.okhttp/okhttp@2.7.5", OkHttpClient())
         val reps = seq.take(20).toList()
         println(reps)
-        val res = reps[2].cloneTo(Paths.get("C:\\Users\\valer\\IdeaProjects\\LibMiner\\outputtest")) as JarLocalRepository
-        LOG.info(res.jarName)
+        //val res = reps[2].cloneTo(Paths.get("C:\\Users\\valer\\IdeaProjects\\LibMiner\\outputtest")) as JarLocalRepository
+        //LOG.info(res.targetJar.toString())
     }
 
     @Test

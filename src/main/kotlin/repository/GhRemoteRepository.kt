@@ -17,12 +17,19 @@ import kotlin.io.path.Path
 import kotlin.io.path.notExists
 
 
-class GhRemoteRepository(var url: String, var name: String, val client: OkHttpClient, val configuration: Configuration) :
+class GhRemoteRepository(
+    override var url: String,
+    override var name: String,
+    var author: String,
+    private val client: OkHttpClient,
+    val configuration: Configuration
+) :
     RemoteRepository {
 
     constructor(repoJSON: JsonObject, client: OkHttpClient, configuration: Configuration) : this(
         repoJSON.get("html_url").toString(),
-        repoJSON.get("full_name").toString(),
+        repoJSON.get("full_name").toString().split('/')[1],
+        repoJSON.get("full_name").toString().split('/')[0],
         client,
         configuration
     )
@@ -30,6 +37,7 @@ class GhRemoteRepository(var url: String, var name: String, val client: OkHttpCl
     init {
         url = url.replace("\"", "")
         name = name.replace("\"", "")
+        author = author.replace("\"", "")
     }
 
     fun hasJar(): Boolean {

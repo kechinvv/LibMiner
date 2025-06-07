@@ -4,8 +4,7 @@ import com.charleskorn.kaml.Yaml
 import com.charleskorn.kaml.decodeFromStream
 import org.kechinvv.analysis.Instrumentation
 import org.kechinvv.config.Configuration
-import org.kechinvv.repository.GradleLocalRepository
-import java.io.File
+import org.kechinvv.repository.LocalRepository
 import java.io.FileInputStream
 import java.nio.file.Paths
 
@@ -21,7 +20,7 @@ fun main() {
 
     val classpath = Paths.get("C:\\Users\\valer\\IdeaProjects\\libminer_test\\build\\classes\\java\\main")
     val mvn_classpath = "C:\\Users\\valer\\IdeaProjects\\libminer_mvtest\\target\\classes"
-    val local = GradleLocalRepository(File("C:\\Users\\valer\\IdeaProjects\\libminer_test"), configuration)
+    val local = LocalRepository(Paths.get("C:\\Users\\valer\\IdeaProjects\\libminer_test"), configuration)
     local.build()
 
     val i = Instrumentation().runAnalyze(classpath, "java.io.File", classpath, false)

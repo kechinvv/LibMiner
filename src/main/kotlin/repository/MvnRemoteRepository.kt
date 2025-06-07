@@ -43,7 +43,7 @@ data class MvnRemoteRepository(
             Files.walk(outputDir).filter {
                 !it.isDirectory() && it.name.contains(name) && it.name.contains(version)
             }.findFirst().orElseThrow()
-        return JarLocalRepository(targetJarPath, outputDir.toFile())
+        return JarLocalRepository(targetJarPath, outputDir)
     }
 
 }

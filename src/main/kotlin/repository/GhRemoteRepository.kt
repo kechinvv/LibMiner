@@ -9,7 +9,7 @@ import org.kechinvv.config.Configuration
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
-import java.net.URL
+import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.zip.ZipFile
@@ -51,7 +51,7 @@ class GhRemoteRepository(
             .addHeader("Authorization", "Bearer ${configuration.ghToken}")
             .addHeader("Accept", "application/vnd.github+json")
             .build()
-        val response = client.newCall(request).execute().body?.string()
+        val response = client.newCall(request).execute().body.string()
         val json = JsonParser.parseString(response).asJsonObject
         if (json.has("assets")) {
             val jsonAssets = json.getAsJsonArray("assets")
@@ -77,7 +77,7 @@ class GhRemoteRepository(
         val downloadURL = getAssets()
         if (downloadURL != null) {
             Files.createDirectories(outputDir)
-            val fileBytes = URL(downloadURL).readBytes()
+            val fileBytes = URI(downloadURL).toURL().readBytes()
             var remoteName = downloadURL.split('/').last()
             if (!downloadURL.endsWith(".jar")) remoteName += ".zip"
             val fileName = "$outputDir/$remoteName"
@@ -98,7 +98,7 @@ class GhRemoteRepository(
                     .call().close()
             }
         }
-        return AbstractLocalRepository.getLocalRepository(outputDir.toFile(), configuration)
+        return LocalRepository(outputDir, configuration)
     }
 
     private fun unzip(zipFileName: String, destDirectory: String) {

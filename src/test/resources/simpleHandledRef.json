@@ -1,0 +1,44 @@
+{
+    "klass": "any",
+    "shifts": [
+        {
+            "from": "1",
+            "to": "2",
+            "with": [
+                "b"
+            ]
+        },
+        {
+            "from": "2",
+            "to": "3",
+            "with": [
+                "c"
+            ]
+        },
+        {
+            "from": "0",
+            "to": "1",
+            "with": [
+                "a"
+            ]
+        }
+    ],
+    "states": [
+        {
+            "name": "0",
+            "type": "INIT"
+        },
+        {
+            "name": "1",
+            "type": "DEF"
+        },
+        {
+            "name": "2",
+            "type": "DEF"
+        },
+        {
+            "name": "3",
+            "type": "FIN"
+        }
+    ]
+}

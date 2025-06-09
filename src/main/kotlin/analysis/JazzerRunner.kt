@@ -1,5 +1,6 @@
 package org.kechinvv.analysis
 
+import org.apache.commons.lang.SystemUtils
 import org.kechinvv.utils.JazzerDownloader
 import org.kechinvv.utils.logger
 import java.io.File
@@ -19,6 +20,7 @@ class JazzerRunner(val fuzzingExecutions: Int, val fuzzingTimeInSeconds: Int) {
     fun run(classpathDirs: List<Path>, targetMethod: String) {
         val jazzerCpArg = classpathDirs.flatMap { cp -> Files.walk(cp).filter { it.extension == "jar" }.toList() }
             .joinToString(File.pathSeparator)
+        val devNull = if (SystemUtils.IS_OS_WINDOWS) "nul" else "/dev/null"
 
         val jazzerProcess = ProcessBuilder(
             jazzerExecutor.toString(),
@@ -26,7 +28,8 @@ class JazzerRunner(val fuzzingExecutions: Int, val fuzzingTimeInSeconds: Int) {
             "--keep_going=0",
             "-runs=$fuzzingExecutions",
             "-max_total_time=$fuzzingTimeInSeconds",
-            "--autofuzz=$targetMethod"
+            "--autofuzz=$targetMethod",
+            "--reproducer_path=$devNull",
         )
 
         jazzerProcess.redirectOutput(ProcessBuilder.Redirect.appendTo(File("jazzer.log")))

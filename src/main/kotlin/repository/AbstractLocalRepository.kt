@@ -12,12 +12,12 @@ import kotlin.io.path.*
 abstract class AbstractLocalRepository(val path: Path) {
 
     fun cleanLibMinerLogs() {
-        Files.walk(path, 1).filter { it.name.endsWith("libminer.log") }.forEach { Files.delete(it) }
+        Files.walk(path).filter { it.name.endsWith("libminer.log") }.forEach { Files.delete(it) }
     }
 
     fun extractTracesFromLogs(): Map<String, List<MethodData>> {
         val separatedTraces = HashMap<String, MutableList<InvokeData>>()
-        Files.walk(path, 1).filter { it.name.endsWith("libminer.log") }.forEach { logFile ->
+        Files.walk(path).filter { it.name.endsWith("libminer.log") }.forEach { logFile ->
             logFile.readLines().forEach { strInvokeData ->
                 val invokeData = Json.decodeFromString<InvokeData>(strInvokeData)
                 if (!invokeData.methodData.isStatic)

@@ -97,7 +97,7 @@ class Storage(dbName: String, private val cashSize: Int) {
     }
 
 
-    fun getTracesForClass(klass: String): HashSet<TraceHolder> {
+    fun getTracesForClass(klass: String): Set<TraceHolder> {
         val tracesQuery = database.from(SequenceEntity).select(SequenceEntity.trace, SequenceEntity.count)
             .where(SequenceEntity.klass.eq(klass))
         val result = HashSet<TraceHolder>()

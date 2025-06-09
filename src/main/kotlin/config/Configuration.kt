@@ -43,14 +43,6 @@ class Configuration {
     var traversDepth: Int = 6
     var traceCount: Int = 1000000
 
-    // inference
-    var useSignature: Boolean = false
-    var unionEnd: Boolean = true
-    var toJson: Boolean = true
 
-    var absoluteFilter: Int? = 10
-    var relativeFilter: Int? = null
-
-    // k for merging
-    var kTail: Int = 2
+    var fsmConfiguration = FsmConfiguration()
 }

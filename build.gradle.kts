@@ -16,6 +16,8 @@ repositories {
 
 dependencies {
     testImplementation(kotlin("test"))
+    testImplementation("io.mockk:mockk:1.14.2")
+
 
     implementation("org.apache.commons:commons-compress:1.26.0")
 

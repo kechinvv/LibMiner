@@ -8,23 +8,20 @@ import guru.nidi.graphviz.model.Factory.mutGraph
 import guru.nidi.graphviz.model.Factory.mutNode
 import guru.nidi.graphviz.model.Link
 import guru.nidi.graphviz.model.MutableNode
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import org.kechinvv.config.Configuration
-import org.kechinvv.entities.MethodData
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 
-const val initial = "<init>"
+const val initial = "initial"
 const val finish = "doublecircle"
 
-class FSM(val info: String, edgesDot: Collection<Link>, nodesDot: Collection<MutableNode>, val configuration: Configuration) {
-    val states = HashSet<State>()
-    var shifts = HashSet<Shift>()
+class FSM(private val klass: String, edgesDot: Collection<Link>, nodesDot: Collection<MutableNode>) {
+    private val states = HashSet<State>()
+    private var shifts = HashSet<Shift>()
     private var unhandled = true
-    val json = Json { prettyPrint = true }
+    private val json = Json { prettyPrint = true }
 
 
     init {
@@ -39,16 +36,13 @@ class FSM(val info: String, edgesDot: Collection<Link>, nodesDot: Collection<Mut
                 states.add(State(it.name().toString(), StateType.DEF))
             }
         }
-        edgesDot.forEach { it ->
+        edgesDot.forEach {
             if (it.from()!!.name().toString() == initial) return@forEach
             shifts.add(
                 Shift(
                     it.from()!!.name().toString(),
                     it.to().name().toString(),
-                    it.attrs().get("label")?.toString()?.split("\\n ")
-                        ?.map { method ->
-                            Json.decodeFromString(method)
-                        } ?: listOf()
+                    it.attrs().get("label")?.toString()?.split("\\n ") ?: emptyList()
                 )
             )
         }
@@ -58,10 +52,13 @@ class FSM(val info: String, edgesDot: Collection<Link>, nodesDot: Collection<Mut
         if (!unhandled) return
         states.forEach {
             val transition =
-                shifts.filter { shift -> it.type == StateType.FIN && shift.from == it.name && shift.to != it.name }
+                shifts.filter { shift -> shift.from == it.name && shift.to != it.name }
+            if (it.type == StateType.INIT) return@forEach
             if (transition.isNotEmpty()) it.type = StateType.DEF
+            else it.type = StateType.FIN
         }
         val finStates = states.filter { it.type == StateType.FIN }.toMutableList()
+        finStates.sortBy { it.name }
         val finState = finStates.removeLastOrNull()
 
         finStates.forEach { state ->
@@ -80,14 +77,13 @@ class FSM(val info: String, edgesDot: Collection<Link>, nodesDot: Collection<Mut
 
     fun unionWith(finName: String) {
         val cycleShifts = shifts.filter { it.to == it.from && it.to == finName }
-        val unionWith = mutableListOf<MethodData>()
+        val unionWith = mutableListOf<String>()
         cycleShifts.forEach { unionWith.addAll(it.with) }
         cycleShifts.forEach { it.with = unionWith }
     }
 
     fun toJson(filePath: Path) {
-        val `class` = info
-        val automaton = Automaton(info, `class`, shifts, states, configuration.useSignature)
+        val automaton = Automaton(klass, shifts, states)
         val strJson = json.encodeToString(automaton)
         Files.deleteIfExists(filePath)
         Files.write(
@@ -114,24 +110,4 @@ class FSM(val info: String, edgesDot: Collection<Link>, nodesDot: Collection<Mut
         Graphviz.fromGraph(g).render(Format.DOT).toFile(filePath.toFile())
     }
 
-    @Serializable
-    data class Shift(var from: String, var to: String, var with: List<MethodData>) {
-        override fun toString(): String = "{from: ${from}, to: ${to}, with: ${with}}"
-
-        fun withToLabel(): String = with.joinToString("\\n ")
-    }
-
-    @Serializable
-    data class State(val name: String, var type: StateType) {
-        override fun toString(): String = "{name: ${name}, type: ${type}}"
-    }
-
-    @Serializable
-    data class Automaton(
-        val name: String,
-        val `class`: String,
-        val shifts: Set<Shift>,
-        val states: Set<State>,
-        val signature: Boolean
-    )
 }

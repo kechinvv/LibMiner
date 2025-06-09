@@ -1,0 +1,66 @@
+{
+    "klass": "any",
+    "shifts": [
+        {
+            "from": "1",
+            "to": "2",
+            "with": [
+                "b"
+            ]
+        },
+        {
+            "from": "2",
+            "to": "5",
+            "with": [
+                "e"
+            ]
+        },
+        {
+            "from": "2",
+            "to": "4",
+            "with": [
+                "d"
+            ]
+        },
+        {
+            "from": "2",
+            "to": "3",
+            "with": [
+                "c"
+            ]
+        },
+        {
+            "from": "0",
+            "to": "1",
+            "with": [
+                "a"
+            ]
+        }
+    ],
+    "states": [
+        {
+            "name": "3",
+            "type": "FIN"
+        },
+        {
+            "name": "1",
+            "type": "DEF"
+        },
+        {
+            "name": "4",
+            "type": "FIN"
+        },
+        {
+            "name": "5",
+            "type": "FIN"
+        },
+        {
+            "name": "2",
+            "type": "DEF"
+        },
+        {
+            "name": "0",
+            "type": "INIT"
+        }
+    ]
+}

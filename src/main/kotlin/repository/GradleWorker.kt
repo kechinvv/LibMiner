@@ -1,19 +1,18 @@
 package org.kechinvv.repository
 
 import org.gradle.tooling.GradleConnector
-import org.kechinvv.config.Configuration
 import java.io.File
 import java.nio.file.Path
 
-class GradleWorker(override val path: Path, override val configuration: Configuration) : BuildSystem {
+class GradleWorker(override val path: Path, gradlePath: String?, gradleVersion: String?) : BuildSystem {
 
     private val connector = GradleConnector.newConnector()
 
     init {
-        if (configuration.gradlePath != null) {
-            connector.useInstallation(File(configuration.gradlePath!!))
-        } else if (configuration.gradleVersion != null) {
-            connector.useGradleVersion(configuration.gradleVersion)
+        if (gradlePath != null) {
+            connector.useInstallation(File(gradlePath))
+        } else if (gradleVersion != null) {
+            connector.useGradleVersion(gradleVersion)
         }
         connector.forProjectDirectory(path.toFile())
     }

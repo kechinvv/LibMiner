@@ -5,8 +5,9 @@ import kotlinx.serialization.Serializable
 @Serializable
 class Configuration {
     var ghQuerySearch: String = ""
-    var ghLanguageSearch: String = ""
+    var ghLanguageSearch: String = "java"
     var ghToken: String = ""
+    var ghFilesPattern: String = "**/*.java"
     var onlyWithJars: Boolean = false
     var useGh: Boolean = true
 
@@ -46,6 +47,9 @@ class Configuration {
     var useSignature: Boolean = false
     var unionEnd: Boolean = true
     var toJson: Boolean = true
+
+    var absoluteFilter: Int? = 10
+    var relativeFilter: Int? = null
 
     // k for merging
     var kTail: Int = 2

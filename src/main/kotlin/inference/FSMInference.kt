@@ -36,7 +36,6 @@ class FSMInference(
         unionEnd: Boolean = configuration.unionEnd
     ) {
         val traces = storage.getTracesForClass(klass)
-        //val methods = storage.getMethodsForClass(klass, staticCalls)
         val methods = traces.flatMap { traceHolder -> traceHolder.trace }.toHashSet()
         val klassStr = klass.replace(".", "+")
         val filePathIn = createInputFile(methods, klassStr)

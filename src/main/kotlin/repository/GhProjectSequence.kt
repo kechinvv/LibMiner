@@ -8,7 +8,8 @@ import okhttp3.Request
 import org.kechinvv.config.Configuration
 
 
-class GhProjectsSequence(val lib: String, val client: OkHttpClient, val configuration: Configuration) : Sequence<RemoteRepository> {
+class GhProjectsSequence(val lib: String, val client: OkHttpClient, val configuration: Configuration) :
+    Sequence<RemoteRepository> {
     val linkGH = "https://api.github.com/search/code"
 
     private var page = 1
@@ -45,14 +46,17 @@ class GhProjectsSequence(val lib: String, val client: OkHttpClient, val configur
 
     private fun makeRequest(): String {
         val queryUrlBuilder = linkGH.toHttpUrl().newBuilder()
-            .addQueryParameter("q", "$lib in:file language:java path:**/*.java size:$lbound..$rbound")
+            .addQueryParameter(
+                "q",
+                "$lib in:file language:${configuration.ghLanguageSearch} path:${configuration.ghFilesPattern} size:$lbound..$rbound"
+            )
             .addQueryParameter("per_page", "100")
             .addQueryParameter("page", page.toString())
         val request = Request.Builder()
             .url(queryUrlBuilder.build())
             .addHeader("Authorization", "Token ${configuration.ghToken}")
             .build()
-        return client.newCall(request).execute().body.string() ?: ""
+        return client.newCall(request).execute().body.string()
     }
 
     private fun getReps(json: JsonObject): List<RemoteRepository> {
@@ -72,7 +76,15 @@ class GhProjectsSequence(val lib: String, val client: OkHttpClient, val configur
                 nextBounds()
                 page = 1
             } else {
-                items.forEach { reps.add(GhRemoteRepository((it as JsonObject).get("repository") as JsonObject, client, configuration)) }
+                items.forEach {
+                    reps.add(
+                        GhRemoteRepository(
+                            (it as JsonObject).get("repository") as JsonObject,
+                            client,
+                            configuration
+                        )
+                    )
+                }
                 total += reps.size
                 page++
             }

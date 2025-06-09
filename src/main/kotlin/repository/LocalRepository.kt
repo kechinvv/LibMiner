@@ -14,10 +14,11 @@ class LocalRepository(path: Path, private val configuration: Configuration) : Ab
             if (it.name == "build.gradle" || it.name == "build.gradle.kts") targets.add(
                 GradleWorker(
                     it.parent,
-                    configuration
+                    configuration.gradlePath,
+                    configuration.gradleVersion
                 )
             )
-            else if (it.name == "pom.xml") targets.add(MavenWorker(it.parent, configuration))
+            else if (it.name == "pom.xml") targets.add(MavenWorker(it.parent, configuration.mavenPathOrEnvVar))
         }
     }
 

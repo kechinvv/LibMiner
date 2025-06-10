@@ -8,6 +8,7 @@ import org.kechinvv.holders.TraceHolder
 import org.kechinvv.inference.Automaton
 import org.kechinvv.inference.FSMInference
 import org.kechinvv.storage.Storage
+import org.kechinvv.utils.ExtractMethod
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.deleteRecursively
 import kotlin.io.path.readText
@@ -29,7 +30,7 @@ class FsmTest {
             MethodData("a", listOf(), "void", false, "test"),
             MethodData("b", listOf(), "void", false, "test"),
             MethodData("c", listOf(), "void", false, "test")
-        ), 1
+        ), ExtractMethod.STATIC, 1
     )
 
     private val traceHolder2 = TraceHolder(
@@ -37,7 +38,7 @@ class FsmTest {
             MethodData("a", listOf(), "void", false, "test"),
             MethodData("b", listOf(), "void", false, "test"),
             MethodData("d", listOf(), "void", false, "test")
-        ), 1
+        ), ExtractMethod.STATIC, 1
     )
 
     private val traceHolder3 = TraceHolder(
@@ -45,7 +46,7 @@ class FsmTest {
             MethodData("a", listOf(), "void", false, "test"),
             MethodData("b", listOf(), "void", false, "test"),
             MethodData("e", listOf(), "void", false, "test")
-        ), 1
+        ), ExtractMethod.STATIC, 1
     )
 
     @Test

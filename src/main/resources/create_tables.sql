@@ -4,7 +4,7 @@ create table if not exists
               class text,
               samples integer,
               extract_method text,
-              UNIQUE(trace, class)
+              UNIQUE(trace, class, extract_method)
 );
 
 

@@ -12,6 +12,7 @@ class GetRepoTest {
     companion object {
         val LOG by logger()
     }
+
     @Test
     @Ignore
     fun ghGetReposTest() {

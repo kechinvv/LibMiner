@@ -83,7 +83,7 @@ class FsmTest {
         every { storage.getTracesForClass(any()) } returns traces
         val inference = FSMInference(configuration, storage)
         val result = inference.inferenceByClass("any").json?.readText()
-        val reference = this::class.java.getResource("NotUnionEndRef.json")!!.readText()
+        val reference = this::class.java.getResource("notUnionEndRef.json")!!.readText()
         val refFsm = Json.decodeFromString<Automaton>(reference)
         val resultFsm = result?.let { Json.decodeFromString<Automaton>(it) }
         assert(refFsm == resultFsm)

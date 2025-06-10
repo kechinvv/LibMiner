@@ -91,8 +91,7 @@ class Instrumentation {
                 Transform(
                     "jtp.ihash",
                     InstrumentationTransformer(
-                        lib,
-                        "C:\\Users\\valer\\IdeaProjects\\libminer_test"
+                        lib
                     )
                 )
             )

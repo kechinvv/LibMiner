@@ -1,16 +1,12 @@
 package org.kechinvv
 
-import com.charleskorn.kaml.Yaml
-import com.charleskorn.kaml.decodeFromStream
 import org.kechinvv.analysis.Instrumentation
 import org.kechinvv.config.Configuration
 import org.kechinvv.repository.LocalRepository
-import java.io.FileInputStream
 import java.nio.file.Paths
 
 fun main() {
-    val configuration =
-        Yaml.default.decodeFromStream(Configuration.serializer(), FileInputStream("config.yaml"))
+    val configuration = Configuration()
     val classpath_jar =
         Paths.get("C:\\Users\\valer\\IdeaProjects\\libminer_test\\build\\libs\\libminer_test-1.0-SNAPSHOT.jar")
 
@@ -22,8 +18,7 @@ fun main() {
     val mvn_classpath = "C:\\Users\\valer\\IdeaProjects\\libminer_mvtest\\target\\classes"
     val local = LocalRepository(Paths.get("C:\\Users\\valer\\IdeaProjects\\libminer_test"), configuration)
     local.build()
-
-    val i = Instrumentation().runAnalyze(classpath, "java.io.File", classpath, false)
+    val i = Instrumentation().runAnalyze(classpath, "secret", classpath, false)
     local.runTests()
 
 

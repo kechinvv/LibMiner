@@ -10,15 +10,7 @@ public class LibMinerInstrumentationHelper {
 
     public static void writeInvokeInfoObj(String invokeData, Object object) {
         try {
-            var text = String.format(invokeData, System.identityHashCode(object), System.nanoTime(), id.toString());
-            Files.write(Paths.get(Thread.currentThread().getId() + "_libminer.log"), text.getBytes(), StandardOpenOption.APPEND, StandardOpenOption.CREATE);
-        } catch (IOException ignored) {
-        }
-    }
-
-    public static void writeInvokeInfoObj(String invokeData) {
-        try {
-            var text = String.format(invokeData, 0, System.nanoTime(), id.toString());
+            String text = String.format(invokeData, System.identityHashCode(object), System.nanoTime(), id.toString());
             Files.write(Paths.get(Thread.currentThread().getId() + "_libminer.log"), text.getBytes(), StandardOpenOption.APPEND, StandardOpenOption.CREATE);
         } catch (IOException ignored) {
         }

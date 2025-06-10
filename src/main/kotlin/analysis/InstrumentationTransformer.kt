@@ -7,11 +7,10 @@ import org.kechinvv.utils.foundLib
 import soot.*
 import soot.javaToJimple.DefaultLocalGenerator
 import soot.jimple.*
+import soot.jimple.internal.JAssignStmt
 
 
-class InstrumentationTransformer(val lib: String, val logPath: String) : BodyTransformer() {
-
-    //methods
+class InstrumentationTransformer(val lib: String) : BodyTransformer() {
 
 
     override fun internalTransform(body: Body?, phase: String?, options: MutableMap<String, String>?) {
@@ -26,8 +25,6 @@ class InstrumentationTransformer(val lib: String, val logPath: String) : BodyTra
 
         val logObj = Scene.v()
             .getMethod("<LibMinerInstrumentationHelper: void writeInvokeInfoObj(java.lang.String,java.lang.Object)>")
-        val logStatic =
-            Scene.v().getMethod("<LibMinerInstrumentationHelper: void writeInvokeInfoObj(java.lang.String)>")
 
         while (stmtIt.hasNext()) {
             val stmt = stmtIt.next() as Stmt
@@ -44,16 +41,14 @@ class InstrumentationTransformer(val lib: String, val logPath: String) : BodyTra
             val metaVarStmt = jimple.newAssignStmt(metaVar, invokeDataStrConst)
             generatedUnits.add(metaVarStmt)
 
-            if (methodData.isStatic) {
+            val analyzedObj =
+                if (methodData.isStatic && stmt is JAssignStmt) stmt.leftOp
+                else if (!methodData.isStatic) stmt.invokeExpr.useBoxes[0].value
+                else null
+            if (analyzedObj != null) {
                 val callLogStatic =
-                    jimple.newInvokeStmt(jimple.newStaticInvokeExpr(logStatic.makeRef(), metaVar))
-                generatedUnits.add(callLogStatic)
-            } else {
-                val analyzedObj = stmt.invokeExpr.useBoxes[0].value
-
-                val callLogObj =
                     jimple.newInvokeStmt(jimple.newStaticInvokeExpr(logObj.makeRef(), metaVar, analyzedObj))
-                generatedUnits.add(callLogObj)
+                generatedUnits.add(callLogStatic)
             }
 
             units.insertAfter(generatedUnits, stmt)

@@ -5,9 +5,9 @@ import kotlinx.serialization.Serializable
 @Serializable
 class Configuration {
     var ghQuerySearch: String = ""
-    var ghLanguageSearch: String = "java"
+    var ghLanguageSearch: String? = "java"
     var ghToken: String = ""
-    var ghFilesPattern: String = "**/*.java"
+    var ghFileName: String? = null
     var onlyWithJars: Boolean = false
     var useGh: Boolean = true
 

@@ -7,11 +7,16 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.kechinvv.utils.logger
 
 
+class MvnProjectSequence(libGroup: String, libName: String, libVersion: String, val client: OkHttpClient) :
+    Sequence<RemoteRepository> {
 
+    companion object {
+        val LOG by logger()
+    }
 
-class MvnProjectSequence(val lib: String, val client: OkHttpClient) : Sequence<RemoteRepository> {
     private val linkSonatype = "https://central.sonatype.com/api/internal/browse/dependents"
     private val sonatypeBodyTemplate = this::class.java.getResource("/sonabody.json")!!.readText(Charsets.UTF_8)
 
@@ -21,17 +26,19 @@ class MvnProjectSequence(val lib: String, val client: OkHttpClient) : Sequence<R
     private val pageSize = 20
     private val maxPageCount = 500
 
-    var foundPageCount = -1
+    private var foundPageCount = -1
+    private val lib: String = "$libGroup/$libName@$libVersion"
 
     private val inner = generateSequence {
-        if (endOfSearch()) null
-        else {
+        if (endOfSearch()) {
+            LOG.debug("end of search")
+            null
+        } else {
             if (endOfPages()) {
-                nextTerm()
                 page = 0
+                nextTerm()
             }
             val response = makeRequest()
-            page++
             val reps = getReps(response)
             reps
         }
@@ -68,17 +75,25 @@ class MvnProjectSequence(val lib: String, val client: OkHttpClient) : Sequence<R
     }
 
     private fun getReps(json: JsonObject): List<RemoteRepository> {
-        foundPageCount = json.getAsJsonPrimitive("pageCount").asInt
-        val jsonReps = json.getAsJsonArray("components")
-        val res = mutableListOf<RemoteRepository>()
-        jsonReps.forEach {
-            val item = it.asJsonObject
-            val namespace = item.get("sourceNamespace").asString
-            val name = item.get("sourceName").asString
-            val version = item.get("sourceVersion").asString
-            res.add(MvnRemoteRepository(namespace, name, version))
+        try {
+            LOG.debug("page: {}, term: {} found: {}", page, searchTerm, foundPageCount)
+            foundPageCount = json.getAsJsonPrimitive("pageCount").asInt
+            val jsonReps = json.getAsJsonArray("components")
+            val res = mutableListOf<RemoteRepository>()
+            jsonReps.forEach {
+                val item = it.asJsonObject
+                val namespace = item.get("sourceNamespace").asString
+                val name = item.get("sourceName").asString
+                val version = item.get("sourceVersion").asString
+                res.add(MvnRemoteRepository(namespace, name, version))
+            }
+            if (foundPageCount > 0) page++
+            return res
+        } catch (_: Exception) {
+            LOG.info("Mvn return msg: $json")
+            Thread.sleep(30_000)
+            return listOf()
         }
-        return res
     }
 
     override fun iterator() = inner.iterator()
@@ -104,7 +119,7 @@ private class Term {
     }
 
     fun isEmpty(): Boolean = term.isEmpty()
-    fun isLast(): Boolean = term.fold(true) { acc, el -> acc && el == 'z' }
+    fun isLast(): Boolean = if (isEmpty()) false else term.fold(true) { acc, el -> acc && el == 'z' }
 
     override fun toString(): String {
         return term.joinToString(separator = "")

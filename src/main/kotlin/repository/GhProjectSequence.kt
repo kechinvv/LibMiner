@@ -6,10 +6,15 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.kechinvv.config.Configuration
+import org.kechinvv.utils.logger
 
 
-class GhProjectsSequence(val lib: String, val client: OkHttpClient, val configuration: Configuration) :
+class GhProjectsSequence(val client: OkHttpClient, val configuration: Configuration) :
     Sequence<RemoteRepository> {
+    companion object {
+        val LOG by logger()
+    }
+
     val linkGH = "https://api.github.com/search/code"
 
     private var page = 1
@@ -32,6 +37,7 @@ class GhProjectsSequence(val lib: String, val client: OkHttpClient, val configur
                 page = 1
             }
             val response = makeRequest()
+            LOG.debug(response)
             val json = JsonParser.parseString(response).asJsonObject
             val reps = getReps(json)
             reps
@@ -45,10 +51,13 @@ class GhProjectsSequence(val lib: String, val client: OkHttpClient, val configur
     }
 
     private fun makeRequest(): String {
+        val langFilter =
+            if (configuration.ghLanguageSearch != null) "language:${configuration.ghLanguageSearch}" else ""
+        val filenameFilter = if (configuration.ghFileName != null) "filename:${configuration.ghFileName}" else ""
         val queryUrlBuilder = linkGH.toHttpUrl().newBuilder()
             .addQueryParameter(
                 "q",
-                "$lib in:file language:${configuration.ghLanguageSearch} path:${configuration.ghFilesPattern} size:$lbound..$rbound"
+                "${configuration.ghQuerySearch} in:file $langFilter $filenameFilter size:$lbound..$rbound"
             )
             .addQueryParameter("per_page", "100")
             .addQueryParameter("page", page.toString())
@@ -66,7 +75,7 @@ class GhProjectsSequence(val lib: String, val client: OkHttpClient, val configur
                 json.get("message").toString() == "Bad credentials"
             ) throw Exception("Bad credentials")
             else {
-                println(json.get("message"))
+                LOG.info("GH return msg: ${json.get("message")}")
                 Thread.sleep(SLEEP)
             }
         else if (json.get("total_count").asInt > maxRes && (rbound - lbound > 1)) rbound -= (rbound - lbound) / 2

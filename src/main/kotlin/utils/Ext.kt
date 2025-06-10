@@ -85,4 +85,5 @@ private fun classModifiersCheck(modifiers: Set<String>?, target: SootClass): Boo
 fun <R : Any> R.logger(): Lazy<Logger> = lazy {
     return@lazy LoggerFactory
         .getLogger((if (this.javaClass.kotlin.isCompanion) this.javaClass.enclosingClass else this.javaClass).name)
+
 }

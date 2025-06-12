@@ -5,6 +5,7 @@ import org.kechinvv.entities.MethodData
 import org.kechinvv.holders.TraceHolder
 import org.kechinvv.repository.GhRemoteRepository
 import org.kechinvv.repository.MvnRemoteRepository
+import org.kechinvv.repository.RepositoryData
 import org.kechinvv.storage.Storage
 import org.kechinvv.utils.ExtractMethod
 import java.nio.file.Paths
@@ -83,14 +84,25 @@ class StorageTest {
 
     private val configuration = Configuration()
     val repos = setOf(
-        GhRemoteRepository("stub1.url", "name", "author", OkHttpClient(), configuration),
-        GhRemoteRepository("stub2.url", "name", "author", OkHttpClient(), configuration),
-        GhRemoteRepository("stub3.url", "name", "author", OkHttpClient(), configuration),
-        MvnRemoteRepository("group", "name", "version1"),
-        MvnRemoteRepository("group", "name", "version2"),
-        MvnRemoteRepository("group", "name", "version3")
+        GhRemoteRepository(
+            RepositoryData(name = "name", url = "stub1.url", author = "author"),
+            OkHttpClient(),
+            configuration
+        ),
+        GhRemoteRepository(
+            RepositoryData(name = "name", url = "stub2.url", author = "author"),
+            OkHttpClient(),
+            configuration
+        ),
+        GhRemoteRepository(
+            RepositoryData(name = "name", url = "stub3.url", author = "author"),
+            OkHttpClient(),
+            configuration
+        ),
+        MvnRemoteRepository("name", "group", "version1"),
+        MvnRemoteRepository("name", "group", "version2"),
+        MvnRemoteRepository("name", "group", "version3")
     )
-
 
 
     @Test
@@ -99,10 +111,7 @@ class StorageTest {
         assert(targetDb.exists())
         for (repo in repos) {
             assertFalse { storage.repoWasFound(repo) }
-            when(repo) {
-                is GhRemoteRepository -> storage.saveGhRepo(repo)
-                is MvnRemoteRepository -> storage.saveMvnRepo(repo)
-            }
+            storage.saveRepo(repo)
         }
         for (repo in repos) {
             assertTrue { storage.repoWasFound(repo) }

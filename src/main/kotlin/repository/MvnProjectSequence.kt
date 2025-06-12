@@ -85,7 +85,7 @@ class MvnProjectSequence(libGroup: String, libName: String, libVersion: String, 
                 val namespace = item.get("sourceNamespace").asString
                 val name = item.get("sourceName").asString
                 val version = item.get("sourceVersion").asString
-                res.add(MvnRemoteRepository(namespace, name, version))
+                res.add(MvnRemoteRepository(group = namespace, name = name, version = version))
             }
             if (foundPageCount > 0) page++
             return res

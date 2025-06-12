@@ -3,11 +3,9 @@ package org.kechinvv.storage
 import kotlinx.serialization.json.Json
 import org.kechinvv.entities.MethodData
 import org.kechinvv.holders.TraceHolder
-import org.kechinvv.repository.GhRemoteRepository
-import org.kechinvv.repository.MvnRemoteRepository
 import org.kechinvv.repository.RemoteRepository
+import org.kechinvv.repository.RepositoryData
 import org.kechinvv.utils.ExtractMethod
-import org.kechinvv.utils.PrjSource
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
 import org.ktorm.schema.ColumnDeclaring
@@ -22,10 +20,10 @@ class Storage(dbName: Path, private val cashSize: Int = 10000) {
 
     private val database: Database
 
-    private var simpleRepoCash = LinkedHashSet<String>()
+    private var simpleRepoCash = LinkedHashSet<RepositoryData>()
 
-    private fun updateCash(url: String) {
-        simpleRepoCash.add(url)
+    private fun updateCash(repo: RepositoryData) {
+        simpleRepoCash.add(repo)
         if (simpleRepoCash.size > cashSize) simpleRepoCash.removeFirst()
     }
 
@@ -59,41 +57,60 @@ class Storage(dbName: Path, private val cashSize: Int = 10000) {
         }
     }
 
-    fun saveGhRepo(repo: GhRemoteRepository) {
+    fun saveRepo(repo: RemoteRepository) {
+        val source = repo.getSourceType()
+        val data = repo.repositoryData
         database.insertOrUpdate(RepositoryEntity) {
-            set(it.name, repo.name)
-            set(it.author, repo.author)
-            set(it.url, repo.url)
-            set(it.source, PrjSource.GITHUB.name)
+            set(it.name, data.name)
+            set(it.namespace, data.group)
+            set(it.version, data.version)
+            set(it.author, data.author)
+            set(it.url, data.url)
+            set(it.source, source.name)
             set(it.date, LocalDateTime.now())
             onConflict(it.url) {
                 doNothing()
             }
         }
-        updateCash(repo.url)
+        updateCash(data)
     }
 
-
-    fun saveMvnRepo(repo: MvnRemoteRepository) {
-        database.insertOrUpdate(RepositoryEntity) {
-            set(it.name, repo.name)
-            set(it.namespace, repo.group)
-            set(it.version, repo.version)
-            set(it.url, repo.url)
-            set(it.source, PrjSource.MAVEN_CENTRAL.name)
-            set(it.date, LocalDateTime.now())
-            onConflict(it.url) {
-                doNothing()
-            }
-        }
-        updateCash(repo.url)
-    }
 
     fun repoWasFound(repo: RemoteRepository): Boolean {
-        if (simpleRepoCash.contains(repo.url)) return true
-        database.from(RepositoryEntity).select(RepositoryEntity.url).where(RepositoryEntity.url.eq(repo.url))
+        val data = repo.repositoryData
+        if (simpleRepoCash.contains(repo.repositoryData)) return true
+        database.from(RepositoryEntity).select().where(RepositoryEntity.url.eq(data.url))
             .forEach {
-                updateCash(it[RepositoryEntity.url]!!)
+                val name = it[RepositoryEntity.name]!!
+                val version = it[RepositoryEntity.version]
+                val author = it[RepositoryEntity.author]
+                val url = it[RepositoryEntity.url]!!
+                val group = it[RepositoryEntity.namespace]
+                updateCash(RepositoryData(name, url, group, version, author))
+                return true
+            }
+        return false
+    }
+
+    fun repoWasFoundIgnoreVersion(repo: RemoteRepository): Boolean {
+        val data = repo.repositoryData
+        if (simpleRepoCash.firstOrNull { it.name == data.name && it.author == data.author && it.group == data.group } != null) return true
+        val conditions = ArrayList<ColumnDeclaring<Boolean>>()
+        conditions.add(RepositoryEntity.name.eq(data.name))
+        if (data.author != null) conditions.add(RepositoryEntity.author.eq(data.author))
+        else conditions.add(RepositoryEntity.author.isNull())
+        if (data.group != null) conditions.add(RepositoryEntity.namespace.eq(data.group))
+        else conditions.add(RepositoryEntity.namespace.isNull())
+
+        database.from(RepositoryEntity).select()
+            .where(conditions.reduce { a, b -> a and b })
+            .forEach {
+                val name = it[RepositoryEntity.name]!!
+                val version = it[RepositoryEntity.version]
+                val author = it[RepositoryEntity.author]
+                val url = it[RepositoryEntity.url]!!
+                val group = it[RepositoryEntity.namespace]
+                updateCash(RepositoryData(name, url, group, version, author))
                 return true
             }
         return false

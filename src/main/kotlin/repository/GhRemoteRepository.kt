@@ -6,6 +6,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.eclipse.jgit.api.Git
 import org.kechinvv.config.Configuration
+import org.kechinvv.utils.PrjSource
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
@@ -18,27 +19,23 @@ import kotlin.io.path.notExists
 
 
 class GhRemoteRepository(
-    override var url: String,
-    override var name: String,
-    var author: String,
+    override val repositoryData: RepositoryData,
     private val client: OkHttpClient,
     val configuration: Configuration
 ) :
     RemoteRepository {
 
     constructor(repoJSON: JsonObject, client: OkHttpClient, configuration: Configuration) : this(
-        repoJSON.get("html_url").toString(),
-        repoJSON.get("full_name").toString().split('/')[1],
-        repoJSON.get("full_name").toString().split('/')[0],
+        RepositoryData(
+            name = repoJSON.get("full_name").toString().split('/')[1].replace("\"", ""),
+            author =  repoJSON.get("full_name").toString().split('/')[0].replace("\"", ""),
+            url = repoJSON.get("html_url").toString().replace("\"", ""),
+        ),
         client,
         configuration
     )
 
-    init {
-        url = url.replace("\"", "")
-        name = name.replace("\"", "")
-        author = author.replace("\"", "")
-    }
+
 
     fun hasJar(): Boolean {
         val link = getAssets()
@@ -47,7 +44,7 @@ class GhRemoteRepository(
 
     fun getAssets(): String? {
         val request = Request.Builder()
-            .url("https://api.github.com/repos/$name/releases/latest")
+            .url("https://api.github.com/repos/${repositoryData.name}/releases/latest")
             .addHeader("Authorization", "Bearer ${configuration.ghToken}")
             .addHeader("Accept", "application/vnd.github+json")
             .build()
@@ -68,7 +65,7 @@ class GhRemoteRepository(
     }
 
     override fun toString(): String {
-        return "$name $url"
+        return "${repositoryData.name} ${repositoryData.url}"
     }
 
 
@@ -93,13 +90,15 @@ class GhRemoteRepository(
                 Git.cloneRepository()
                     .setDepth(1)
                     .setCloneSubmodules(true)
-                    .setURI(url)
+                    .setURI(repositoryData.url)
                     .setDirectory(outputDir.toFile())
                     .call().close()
             }
         }
         return LocalRepository(outputDir, configuration)
     }
+
+    override fun getSourceType(): PrjSource = PrjSource.GITHUB
 
     private fun unzip(zipFileName: String, destDirectory: String) {
         File(destDirectory).run {

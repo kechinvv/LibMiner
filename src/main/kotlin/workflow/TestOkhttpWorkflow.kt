@@ -2,6 +2,7 @@ package org.kechinvv.workflow
 
 import okhttp3.OkHttpClient
 import org.kechinvv.analysis.SceneExtractor
+import org.kechinvv.analysis.SootManager
 import org.kechinvv.config.Configuration
 import org.kechinvv.inference.FSMInference
 import org.kechinvv.repository.JarLocalRepository
@@ -66,5 +67,27 @@ class TestOkhttpWorkflow {
         config.fsmConfiguration.kTail = 1
         val fsmInference = FSMInference(config.fsmConfiguration, storage)
         fsmInference.inferenceByClass("java.io.File")
+    }
+
+
+    fun collectStaticTracesNew() {
+        config.targetLibExtractingUnit = setOf("okhttp", "okhttp3", "com.squareup.okhttp")
+
+        var total = 0
+        Files.walk(workdir, 2).filter { it != workdir && it.isDirectory() }.forEach { dir ->
+
+            try {
+                val targetJar = dir.walk().first { it.nameWithoutExtension == dir.name && it.extension == "jar" }
+                val jarRepo = JarLocalRepository(targetJar, dir)
+                println(jarRepo.targetJar)
+                println(total)
+                SootManager.staticExtract(jarRepo.targetJar, storage, config)
+                total++
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+
+        }
+        println(total)
     }
 }

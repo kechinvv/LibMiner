@@ -37,7 +37,7 @@ class SceneExtractor(val configuration: Configuration, val storage: Storage) {
             Options.v().set_process_jar_dir(listOf(classpath.parent.toString()))
             Options.v().set_output_format(Options.output_format_jimple)
             Options.v().setPhaseOption("cg.spark", "enabled:true")
-            Options.v().setPhaseOption("cg", "verbose:true");
+            Options.v().setPhaseOption("cg", "verbose:true")
 
             val javaPaths = File("javapaths.txt").readText().trim()
             var classPaths = javaPaths.replace(Regex("(\n|\r|\r\n)"), File.pathSeparator)
@@ -70,7 +70,6 @@ class SceneExtractor(val configuration: Configuration, val storage: Storage) {
                 if (it.isEntryPoint(filters)) entryPoints.add(it)
             }
         }
-        org.kechinvv.analysis.SequenceCollectorTransformer.LOG.info("Entry points size: ${entryPoints.size}")
     }
 
 }

@@ -8,6 +8,8 @@ import org.kechinvv.repository.RepositoryData
 import org.kechinvv.utils.ExtractMethod
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
+import org.ktorm.logging.ConsoleLogger
+import org.ktorm.logging.LogLevel
 import org.ktorm.schema.ColumnDeclaring
 import org.ktorm.support.sqlite.SQLiteDialect
 import org.ktorm.support.sqlite.insertOrUpdate
@@ -33,7 +35,8 @@ class Storage(dbName: Path, private val cashSize: Int = 10000) {
             "jdbc:sqlite:$dbName",
             user = "root",
             password = "root",
-            dialect = SQLiteDialect()
+            dialect = SQLiteDialect(),
+            logger = ConsoleLogger(LogLevel.INFO),
         )
         database.useConnection { conn ->
             conn.createStatement().use { statement ->

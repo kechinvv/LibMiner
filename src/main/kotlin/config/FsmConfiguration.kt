@@ -7,7 +7,7 @@ import java.nio.file.Paths
 @Serializable
 class FsmConfiguration {
     var mintFilesPath: Path = Paths.get("./mintworkdir")
-    val jsonAndDotFilesPath: Path = mintFilesPath
+    var jsonAndDotFilesPath: Path = mintFilesPath
 
     // inference
     var useSignature: Boolean = false

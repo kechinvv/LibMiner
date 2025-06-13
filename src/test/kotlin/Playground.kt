@@ -26,6 +26,7 @@ class Playground {
 //            "ca.ibodrov.concord.testcontainers.Concord::start"
 //        )
  //       TestOkhttpWorkflow().getPrjs()
+       // TestOkhttpWorkflow().traceCollectSimple()
     }
 
 

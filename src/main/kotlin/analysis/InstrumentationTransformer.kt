@@ -10,7 +10,7 @@ import soot.jimple.*
 import soot.jimple.internal.JAssignStmt
 
 
-class InstrumentationTransformer(val lib: String) : BodyTransformer() {
+class InstrumentationTransformer(val libPatterns: Set<String>) : BodyTransformer() {
 
 
     override fun internalTransform(body: Body?, phase: String?, options: MutableMap<String, String>?) {
@@ -29,7 +29,7 @@ class InstrumentationTransformer(val lib: String) : BodyTransformer() {
         while (stmtIt.hasNext()) {
             val stmt = stmtIt.next() as Stmt
             if (!stmt.containsInvokeExpr()) continue
-            if (!stmt.invokeExpr.method.foundLib(lib)) continue
+            if (!stmt.invokeExpr.method.foundLib(libPatterns)) continue
 
             val generatedUnits: ArrayList<soot.Unit> = ArrayList()
 

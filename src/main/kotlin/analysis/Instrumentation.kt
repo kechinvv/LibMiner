@@ -17,7 +17,7 @@ import kotlin.io.path.deleteRecursively
 
 class Instrumentation {
     @OptIn(ExperimentalPathApi::class)
-    fun runAnalyze(programPath: Path, lib: String, outputDir: Path, jar: Boolean): Boolean {
+    fun runAnalyze(programPath: Path, libPatterns: Set<String>, outputDir: Path, jar: Boolean): Boolean {
         try {
             G.reset()
             Options.v().set_prepend_classpath(true)
@@ -64,7 +64,7 @@ class Instrumentation {
 
             Scene.v().loadNecessaryClasses()
 
-            loadTransform(lib)
+            loadTransform(libPatterns)
 
             PackManager.v().runPacks()
             PackManager.v().writeOutput()
@@ -85,13 +85,13 @@ class Instrumentation {
         }
     }
 
-    fun loadTransform(lib: String) {
+    fun loadTransform(libPatterns: Set<String>) {
         if (!PackManager.v().hasPack("jtp.ihash")) PackManager.v().getPack("jtp")
             .add(
                 Transform(
                     "jtp.ihash",
                     InstrumentationTransformer(
-                        lib
+                        libPatterns
                     )
                 )
             )

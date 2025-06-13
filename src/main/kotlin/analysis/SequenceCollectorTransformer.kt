@@ -1,12 +1,12 @@
 package org.kechinvv.analysis
 
-import kotlinx.serialization.json.Json
+import com.charleskorn.kaml.Yaml
 import org.kechinvv.config.Configuration
+import org.kechinvv.entities.EntryFilter
 import org.kechinvv.entities.MethodData
 import org.kechinvv.storage.Storage
 import org.kechinvv.utils.ExtractMethod
 import org.kechinvv.utils.foundLib
-import org.kechinvv.utils.isEntryPoint
 import org.kechinvv.utils.logger
 import soot.*
 import soot.Unit
@@ -14,29 +14,36 @@ import soot.jimple.internal.AbstractStmt
 import soot.jimple.internal.JAssignStmt
 import soot.jimple.spark.pag.PAG
 import soot.jimple.toolkits.ide.icfg.JimpleBasedInterproceduralCFG
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.util.stream.Collectors
+import kotlin.io.path.extension
+import kotlin.io.path.readText
 
-class SequenceCollectorTransformer(val lib: String, val storage: Storage, val configuration: Configuration) :
+class SequenceCollectorTransformer(val storage: Storage, val configuration: Configuration) :
     SceneTransformer() {
     lateinit var icfg: JimpleBasedInterproceduralCFG
     lateinit var analysis: PAG
     private var counter = 0
     private var stop = false
+    private val filters = Files.walk(Paths.get("entry_points_filters")).filter { it.extension == "yaml" }
+        .map { Yaml.default.decodeFromString(EntryFilter.serializer(), it.readText()) }.collect(Collectors.toSet())
 
     companion object {
         val LOG by logger()
     }
 
     override fun internalTransform(phaseName: String?, options: MutableMap<String, String>?) {
-        Scene.v().entryPoints = mutableListOf<SootMethod>()
-        collectEntryPointsTo(Scene.v().entryPoints)
+        LOG.info("internalTransform")
 
         icfg = JimpleBasedInterproceduralCFG()
         icfg.setIncludePhantomCallees(true)
+
         analysis = Scene.v().pointsToAnalysis as PAG
 
-        Scene.v().entryPoints.forEach { mainMethod ->
-            val startPoints = icfg.getStartPointsOf(mainMethod)
-            LOG.debug("Starting {}", startPoints)
+        Scene.v().entryPoints.forEach { entryMethod ->
+            val startPoints = icfg.getStartPointsOf(entryMethod)
+            LOG.info("Starting with : {}", startPoints)
             stop = false
             counter = 0
 
@@ -74,9 +81,8 @@ class SequenceCollectorTransformer(val lib: String, val storage: Storage, val co
                 try {
                     if (stop) return
                     if (succ is AbstractStmt) {
-                        if (succ.invokeExpr.method.declaringClass in Scene.v().applicationClasses)
-                            method = succ.invokeExpr.method
-                        if (method?.foundLib(lib) == true) {
+                        method = succ.invokeExpr.method
+                        if (method?.foundLib(configuration.targetLibExtractingUnit) == true) {
                             klass = method.declaringClass.toString()
                             if (extracted[klass] == null) extracted[klass] = mutableListOf()
                             indexesOfChangedTraces = saveInvokeToTrace(succ, extracted[klass]!!)
@@ -84,7 +90,7 @@ class SequenceCollectorTransformer(val lib: String, val storage: Storage, val co
                     }
                 } catch (_: Exception) {
                 }
-                if (method != null && depth > 0) {
+                if (method != null && depth > 0 && method.declaringClass.isApplicationClass) {
                     continueAdded = continueStack.add(Pair(succ, isMainMethod))
                     icfg.getStartPointsOf(method).forEach { methodStart ->
                         graphTraverseLib(methodStart, ttl - 1, false, extracted, continueStack, depth - 1)
@@ -143,14 +149,6 @@ class SequenceCollectorTransformer(val lib: String, val storage: Storage, val co
         return this.analysis.reachingObjects(resObj as Local)
     }
 
-    private fun collectEntryPointsTo(entryPoints: MutableCollection<SootMethod>) {
-        Scene.v().applicationClasses.forEach { klass ->
-            klass.methods.forEach {
-                if (it.isEntryPoint(emptyList())) entryPoints.add(it)
-            }
-        }
-        LOG.info("Entry points size: ${entryPoints.size}")
-    }
 }
 
 

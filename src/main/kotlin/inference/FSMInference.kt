@@ -32,7 +32,7 @@ class FSMInference(
 
     fun inferenceByClass(
         klass: String,
-        toJson: Boolean = true,
+        toJson: Boolean = configuration.toJson,
         unionEnd: Boolean = configuration.unionEnd
     ): InferenceResult {
         val traces = storage.getTracesForClass(klass)

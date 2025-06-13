@@ -17,7 +17,7 @@ class Configuration {
     var useMvn: Boolean = true
 
     // qualified package or class
-    var targetLibExtractingUnit: String = ""
+    var targetLibExtractingUnit: Set<String> = setOf("")
 
     var mavenPathOrEnvVar: String = "mvn"
 

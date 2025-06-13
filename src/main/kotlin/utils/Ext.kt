@@ -12,12 +12,15 @@ fun SootMethod.getPathForFuzz(): String {
     return "${this.declaringClass}::${this.name}"
 }
 
-fun SootMethod.foundLib(lib: String): Boolean {
+fun SootMethod.foundLib(libPatterns: Set<String>): Boolean {
     val declClass = this.declaringClass.toString()
-    return declClass.startsWith("$lib.", true) || declClass.lowercase() == lib.lowercase()
+    libPatterns.forEach { lib ->
+        if (declClass.startsWith(lib, true) || declClass.lowercase() == lib.lowercase()) return true
+    }
+    return false
 }
 
-fun SootMethod.isEntryPoint(filters: List<EntryFilter>): Boolean {
+fun SootMethod.isEntryPoint(filters: Set<EntryFilter>): Boolean {
     if (this.isMain) return true
     filters.forEach { f ->
         val match = (f.methodName == null || f.methodName.matches(this.name)) &&
@@ -29,7 +32,7 @@ fun SootMethod.isEntryPoint(filters: List<EntryFilter>): Boolean {
                 (checkArgs(f.args, this)) &&
                 (methodModifiersCheck(f.methodModifiers, this)) &&
                 (classModifiersCheck(f.classModifiers, this.declaringClass))
-        if (!match) return false
+        if (match) return true
     }
 
     return false

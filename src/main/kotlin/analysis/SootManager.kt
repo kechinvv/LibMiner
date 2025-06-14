@@ -71,8 +71,9 @@ object SootManager {
         Options.v().set_output_jar(jar)
         Options.v().set_output_dir(outputDir.toString())
 
-        if (jar) saveMetaInfAndAddHelperToJar(pathToTarget) else addHelperToClasses(pathToTarget)
-
+        val notInstrumentedYet =
+            if (jar) saveMetaInfAndAddHelperToJar(pathToTarget) else addHelperToClasses(pathToTarget)
+        if (!notInstrumentedYet) return
         Scene.v().loadNecessaryClasses()
 
         if (!PackManager.v().hasPack("jtp.ihash")) PackManager.v().getPack("jtp")
@@ -90,28 +91,32 @@ object SootManager {
     private fun restoreMetaInf(pathToTarget: Path) {
         val metainfSaved = pathToTarget.parent.resolve("META-INF")
         if (metainfSaved.exists())
-        ZipFile(pathToTarget.toFile()).addFolder(metainfSaved.toFile())
+            ZipFile(pathToTarget.toFile()).addFolder(metainfSaved.toFile())
         metainfSaved.deleteRecursively()
     }
 
-    private fun saveMetaInfAndAddHelperToJar(pathToTarget: Path) {
+    //return false if already instrumented
+    private fun saveMetaInfAndAddHelperToJar(pathToTarget: Path): Boolean {
         val jarFile = ZipFile(pathToTarget.toFile())
         val helperInZip = jarFile.getFileHeader(helperClass.fileName.toString())
         if (helperInZip != null) {
-            return
+            return false
         }
         jarFile.addFile(helperClass.toFile())
         jarFile.extractFile("META-INF/", pathToTarget.parent.toString())
+        return true
     }
 
-    private fun addHelperToClasses(pathToTarget: Path) {
+    //return false if already instrumented
+    private fun addHelperToClasses(pathToTarget: Path): Boolean {
         val targetHelper = pathToTarget.resolve("LibMinerInstrumentationHelper.class")
-        if (Files.exists(targetHelper)) return
+        if (Files.exists(targetHelper)) return false
         Files.copy(
             helperClass,
             targetHelper,
             StandardCopyOption.REPLACE_EXISTING
         )
+        return true
     }
 
 

@@ -18,9 +18,11 @@ class JazzerRunner(val fuzzingExecutions: Int, val fuzzingTimeInSeconds: Int) {
     }
 
     fun run(classpathDirs: List<Path>, targetMethod: String, workingDir: Path) {
-        val jazzerCpArg = classpathDirs.flatMap { cp -> Files.walk(cp).filter { it.extension == "jar" }.toList() }
+        val jazzerCpArg = classpathDirs.flatMap { cp ->
+            Files.walk(cp).filter { it.extension == "jar" }.map { it.toAbsolutePath() }.toList()
+        }
             .joinToString(File.pathSeparator)
-        val devNull = if (SystemUtils.IS_OS_WINDOWS) "NUL" else "/dev/null"
+        val devNull = if (SystemUtils.IS_OS_WINDOWS) "nul" else "/dev/null"
 
         val jazzerProcess = ProcessBuilder(
             jazzerExecutor.toString(),
@@ -30,7 +32,7 @@ class JazzerRunner(val fuzzingExecutions: Int, val fuzzingTimeInSeconds: Int) {
             "-max_total_time=$fuzzingTimeInSeconds",
             "--autofuzz=$targetMethod",
             "--reproducer_path=$devNull",
-            "--jvm_args=\"-Duser.dir=${workingDir}\""
+            "--jvm_args=\"-Duser.dir=${workingDir.toAbsolutePath()}\""
         )
 
         jazzerProcess.redirectOutput(ProcessBuilder.Redirect.appendTo(File("jazzer.log")))

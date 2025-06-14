@@ -20,9 +20,7 @@ abstract class AbstractLocalRepository(val path: Path) {
         Files.walk(path).filter { it.name.endsWith("libminer.log") }.forEach { logFile ->
             logFile.readLines().forEach { strInvokeData ->
                 val invokeData = Json.decodeFromString<InvokeData>(strInvokeData)
-                if (!invokeData.methodData.isStatic)
-                    separatedTraces.getOrPut(invokeData.iHash) { mutableListOf() }.add(invokeData)
-                else separatedTraces.getOrPut(invokeData.methodData.klass) { mutableListOf() }.add(invokeData)
+                separatedTraces.getOrPut(invokeData.uuid + invokeData.iHash + invokeData.methodData.klass) { mutableListOf() }.add(invokeData)
             }
         }
         separatedTraces.forEach { (_, trace) -> trace.sortBy { invokeData -> invokeData.date.toLong() } }

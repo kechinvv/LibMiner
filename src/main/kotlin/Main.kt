@@ -20,22 +20,23 @@ fun main() {
 //
     val classpath = Paths.get("C:\\Users\\valer\\IdeaProjects\\libminer_test\\build\\classes\\java\\main")
 //    val mvn_classpath = "C:\\Users\\valer\\IdeaProjects\\libminer_mvtest\\target\\classes"
-    val local = LocalRepository(Paths.get("C:\\Users\\valer\\IdeaProjects\\libminer_test"), configuration)
-    local.cleanLibMinerLogs()
-    local.build()
+//    val local = LocalRepository(Paths.get("C:\\Users\\valer\\IdeaProjects\\libminer_test"), configuration)
+//    println(local.extractTracesFromLogs())
+//    local.cleanLibMinerLogs()
+//    local.build()
 //    val i = Instrumentation().runAnalyze(classpath, setOf("secret"), classpath, false)
 //    SootManager.instrumentLibCalls(classpath_jar, classpath_jar, true, setOf("java"))
-    val mvncntrl =
-        Paths.get("C:\\Users\\valer\\IdeaProjects\\LibMiner\\workdir\\okhttpmvn\\aca-java-1.0.0\\aca-java-1.0.0.jar")
-    SootManager.instrumentLibCalls(classpath_jar,  classpath_jar, true, setOf("java", "secret", "com.google.gson"))
-    SootManager.instrumentLibCalls(classpath,  classpath, false, setOf("java", "secret", "com.google.gson"))
-    local.cleanLibMinerLogs()
-    val entryPoints =
-        SootManager.getEntryPoints(classpath_jar)
-    println("Size: ${entryPoints.size}")
-    entryPoints.forEach {
-        JazzerRunner(100000, 300).run(listOf(classpath_jar.parent), it.getPathForFuzz(), classpath_jar.parent)
-    }
+//    val mvncntrl =
+//        Paths.get("C:\\Users\\valer\\IdeaProjects\\LibMiner\\workdir\\okhttpmvn\\aca-java-1.0.0\\aca-java-1.0.0.jar")
+//    SootManager.instrumentLibCalls(classpath_jar,  classpath_jar, true, setOf("java", "secret", "com.google.gson"))
+//    SootManager.instrumentLibCalls(classpath,  classpath, false, setOf("java", "secret", "com.google.gson"))
+//    local.cleanLibMinerLogs()
+//    val entryPoints =
+//        SootManager.getEntryPoints(classpath_jar)
+//    println("Size: ${entryPoints.size}")
+//    entryPoints.forEach {
+//        JazzerRunner(100000, 300).run(listOf(classpath_jar.parent), it.getPathForFuzz(), classpath_jar.parent)
+//    }
 //    local.cleanLibMinerLogs()
 //    Instrumentation().runAnalyze(classpath, "java", classpath, false)
 //    local.runTests()
@@ -44,4 +45,5 @@ fun main() {
 //    target.createDirectory()
 //    RemoteLib("com.atlassian.bamboo", "bamboo-specs-runner", "10.2.1").cloneTo(target)
     // TestOkhttpWorkflow().collectStaticTracesNew()
+    TestOkhttpWorkflow().collectStaticTracesNew()
 }

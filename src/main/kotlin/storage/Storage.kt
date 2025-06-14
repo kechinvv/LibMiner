@@ -16,6 +16,7 @@ import org.ktorm.support.sqlite.insertOrUpdate
 import java.io.FileNotFoundException
 import java.nio.file.Path
 import java.time.LocalDateTime
+import java.util.function.Predicate
 import kotlin.io.path.createDirectories
 
 class Storage(dbName: Path, private val cashSize: Int = 10000) {
@@ -128,7 +129,11 @@ class Storage(dbName: Path, private val cashSize: Int = 10000) {
     }
 
 
-    fun getTracesForClass(klass: String, extractMethod: ExtractMethod? = null): Set<TraceHolder> {
+    fun getTracesForClass(
+        klass: String,
+        extractMethod: ExtractMethod? = null,
+        filter: Predicate<TraceHolder>? = null
+    ): Set<TraceHolder> {
         val conditions = ArrayList<ColumnDeclaring<Boolean>>()
         conditions.add(SequenceEntity.klass.eq(klass))
         if (extractMethod != null) conditions.add(SequenceEntity.extract_method.eq(extractMethod.name))
@@ -138,13 +143,13 @@ class Storage(dbName: Path, private val cashSize: Int = 10000) {
             .where(conditions.reduce { a, b -> a and b })
         val result = HashSet<TraceHolder>()
         tracesQuery.forEach { sequenceRaw ->
-            result.add(
+            val traceHolder =
                 TraceHolder(
                     Json.decodeFromString(sequenceRaw[SequenceEntity.trace]!!),
                     ExtractMethod.valueOf(sequenceRaw[SequenceEntity.extract_method]!!),
                     sequenceRaw[SequenceEntity.count]!!
                 )
-            )
+            if (filter == null || filter.test(traceHolder)) result.add(traceHolder)
         }
         return result
     }

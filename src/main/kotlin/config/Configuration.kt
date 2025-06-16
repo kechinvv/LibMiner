@@ -21,8 +21,8 @@ class Configuration {
     var cacheSize: Int = 10000
 
     // fuzzing limits
-    var fuzzingExecutions: Int = 100
-    var fuzzingTimeInSeconds: Int = 100
+    var fuzzingExecutions: Int = 10000
+    var fuzzingTimeInSeconds: Int = 300
 
     // static extracting
     var traversLength: Int = 1000

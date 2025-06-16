@@ -76,7 +76,7 @@ class DefaultWorkflow(val configuration: Configuration) {
             val jazzer = JazzerRunner(configuration.fuzzingExecutions, configuration.fuzzingTimeInSeconds)
             val entryPoints = SootManager.getEntryPoints(targetJar)
             entryPoints.forEach { entryPoint ->
-                jazzer.run(listOf(localRepo.path), entryPoint.getPathForFuzz(), localRepo.path)
+                jazzer.run(localRepo.getJars().toList(), entryPoint.getPathForFuzz(), localRepo.path)
             }
         }
     }

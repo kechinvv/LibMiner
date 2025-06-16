@@ -7,5 +7,6 @@ interface BuildSystem {
 
     fun build()
     fun runTest()
-
+    fun getJarFolderPath(): Path
+    fun getClassFolderPath(): Path
 }

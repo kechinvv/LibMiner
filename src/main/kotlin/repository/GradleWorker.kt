@@ -41,4 +41,12 @@ class GradleWorker(override val path: Path, gradlePath: String?, gradleVersion: 
             test.run()
         }
     }
+
+    override fun getJarFolderPath(): Path {
+        return path.resolve("build/libs")
+    }
+
+    override fun getClassFolderPath(): Path {
+        return path.resolve("build/classes")
+    }
 }

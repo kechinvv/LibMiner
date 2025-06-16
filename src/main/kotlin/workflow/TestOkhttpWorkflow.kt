@@ -88,7 +88,7 @@ class TestOkhttpWorkflow {
                 val jarRepo = JarLocalRepository(targetJar, dir)
                 println(jarRepo.targetJar)
                 println(total)
-                SootManager.staticExtract(jarRepo.targetJar, storage, config)
+                SootManager.staticExtract(jarRepo.getPathForJarFiles(), storage, config)
                 total++
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -111,7 +111,7 @@ class TestOkhttpWorkflow {
                 println(total)
                 val entryPoints = SootManager.getEntryPoints(jarRepo.targetJar)
                 println("Size: ${entryPoints.size}")
-                SootManager.instrumentLibCalls(targetJar, targetJar, true, config.targetLibExtractingUnit)
+                SootManager.instrumentLibCalls(targetJar, targetJar, config.targetLibExtractingUnit)
                 entryPoints.forEach {
                     jazzerRunner.run(
                         listOf(jarRepo.path),

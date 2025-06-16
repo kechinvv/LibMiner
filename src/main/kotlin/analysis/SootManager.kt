@@ -29,28 +29,33 @@ object SootManager {
         )!!.toURI()
     )
 
-    private fun defaultSetup(pathToTarget: Path) {
+    private fun defaultSetup(pathsToTarget: List<Path>) {
         G.reset()
         Options.v().set_prepend_classpath(true)
         Options.v().set_allow_phantom_refs(true)
         Options.v().set_src_prec(Options.src_prec_class)
-        Options.v().set_process_dir(listOf(pathToTarget.toString()))
-        Options.v().set_process_jar_dir(listOf(pathToTarget.parent.toString()))
+        Options.v().set_process_dir(pathsToTarget.flatMap { pathToTarget ->
+            Files.walk(pathToTarget).filter { it.isDirectory() || it.extension == "jar" }.map { it.toString() }.toList()
+        })
+        val jarPaths = mutableSetOf<String>()
+        pathsToTarget.forEach { path ->
+            path.walk().filter { it.extension == "jar" }.forEach { jarPaths.add(it.parent.toString()) }
+        }
+        if (jarPaths.isNotEmpty()) Options.v().set_process_jar_dir(jarPaths.toList())
         Options.v().set_java_version(21)
 
 
         var classPaths = javaPaths
-        if (classPaths == "") classPaths = pathToTarget.toString()
-        else classPaths += File.pathSeparator + pathToTarget.toString()
+        if (classPaths == "") classPaths = pathsToTarget.joinToString(File.pathSeparator)
+        else classPaths += File.pathSeparator + pathsToTarget.joinToString(File.pathSeparator)
 
         Options.v().set_soot_classpath(classPaths)
     }
 
 
-    fun staticExtract(pathToTarget: Path, storage: Storage, configuration: Configuration) {
-        defaultSetup(pathToTarget)
+    fun staticExtract(pathsToTarget: List<Path>, storage: Storage, configuration: Configuration) {
+        defaultSetup(pathsToTarget)
 
-//        Options.v().set_output_format(Options.output_format_jimple)
         Options.v().set_whole_program(true)
         Options.v().setPhaseOption("cg.spark", "enabled:true")
         Options.v().setPhaseOption("cg", "verbose:true")
@@ -65,8 +70,9 @@ object SootManager {
     }
 
 
-    fun instrumentLibCalls(pathToTarget: Path, outputDir: Path, jar: Boolean, libPatterns: Set<String>) {
-        defaultSetup(pathToTarget)
+    fun instrumentLibCalls(pathToTarget: Path, outputDir: Path, libPatterns: Set<String>) {
+        defaultSetup(listOf(pathToTarget))
+        val jar = pathToTarget.extension == "jar"
 
         Options.v().set_output_jar(jar)
         Options.v().set_output_dir(outputDir.toString())
@@ -121,7 +127,7 @@ object SootManager {
 
 
     fun getEntryPoints(classpath: Path): Set<SootMethod> {
-        defaultSetup(classpath)
+        defaultSetup(listOf(classpath))
         Scene.v().loadNecessaryClasses()
         return getEntryPointsInProcess()
     }

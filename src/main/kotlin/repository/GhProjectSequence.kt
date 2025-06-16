@@ -5,11 +5,11 @@ import com.google.gson.JsonParser
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import org.kechinvv.config.Configuration
+import org.kechinvv.config.ProjectsConfiguration
 import org.kechinvv.utils.logger
 
 
-class GhProjectsSequence(val client: OkHttpClient, val configuration: Configuration) :
+class GhProjectsSequence(val configuration: ProjectsConfiguration, val client: OkHttpClient) :
     Sequence<RemoteRepository> {
     companion object {
         val LOG by logger()
@@ -75,7 +75,7 @@ class GhProjectsSequence(val client: OkHttpClient, val configuration: Configurat
                 json.get("message").toString() == "Bad credentials"
             ) throw Exception("Bad credentials")
             else {
-                LOG.info("GH return msg: ${json.get("message")}")
+                LOG.debug("GH return msg: {}", json.get("message"))
                 Thread.sleep(SLEEP)
             }
         else if (json.get("total_count").asInt > maxRes && (rbound - lbound > 1)) rbound -= (rbound - lbound) / 2

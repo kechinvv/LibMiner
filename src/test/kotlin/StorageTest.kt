@@ -1,6 +1,6 @@
 import okhttp3.OkHttpClient
 import org.junit.jupiter.api.AfterEach
-import org.kechinvv.config.Configuration
+import org.kechinvv.config.ProjectsConfiguration
 import org.kechinvv.entities.MethodData
 import org.kechinvv.holders.TraceHolder
 import org.kechinvv.repository.GhRemoteRepository
@@ -12,7 +12,10 @@ import java.nio.file.Paths
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.deleteRecursively
 import kotlin.io.path.exists
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class StorageTest {
     val targetDb = Paths.get("testdb/test.db")
@@ -82,7 +85,7 @@ class StorageTest {
         }
     }
 
-    private val configuration = Configuration()
+    private val configuration = ProjectsConfiguration()
     val repos = setOf(
         GhRemoteRepository(
             RepositoryData(name = "name", url = "stub1.url", author = "author"),

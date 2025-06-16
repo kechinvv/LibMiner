@@ -7,10 +7,13 @@ import org.kechinvv.utils.ExtractMethod
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
-import java.util.stream.Collectors
 import kotlin.io.path.*
 
 abstract class AbstractLocalRepository(val path: Path) {
+
+    abstract fun getPathForClassFiles(): List<Path>
+    abstract fun getPathForJarFiles(): List<Path>
+
 
     fun cleanLibMinerLogs() {
         Files.walk(path).filter { it.name.endsWith("libminer.log") }.forEach { Files.delete(it) }
@@ -34,7 +37,7 @@ abstract class AbstractLocalRepository(val path: Path) {
     }
 
     fun getJars(): Set<Path> {
-        return Files.walk(path).filter { it.extension == "jar" }.collect(Collectors.toSet())
+        return path.walk().filter { it.extension == "jar" }.toCollection(HashSet())
     }
 
 

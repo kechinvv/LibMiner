@@ -1,11 +1,11 @@
 package org.kechinvv.repository
 
-import org.kechinvv.config.Configuration
+import org.kechinvv.config.ProjectsConfiguration
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.name
 
-class LocalRepository(path: Path, private val configuration: Configuration) : AbstractLocalRepository(path) {
+class LocalRepository(path: Path, private val configuration: ProjectsConfiguration) : AbstractLocalRepository(path) {
 
     private val targets: HashSet<BuildSystem> = HashSet()
 
@@ -29,5 +29,13 @@ class LocalRepository(path: Path, private val configuration: Configuration) : Ab
 
     fun runTests() {
         targets.forEach(BuildSystem::runTest)
+    }
+
+    override fun getPathForClassFiles(): List<Path> {
+        return targets.map { it.getClassFolderPath() }
+    }
+
+    override fun getPathForJarFiles(): List<Path> {
+        return this.getJars().toList()
     }
 }

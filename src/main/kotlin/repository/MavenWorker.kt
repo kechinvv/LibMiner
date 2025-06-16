@@ -21,4 +21,12 @@ class MavenWorker(override val path: Path, val mavenPathOrEnv: String) : BuildSy
         ps.waitFor(60 * 3, TimeUnit.SECONDS)
         ps.destroyForcibly()
     }
+
+    override fun getJarFolderPath(): Path {
+        return path.resolve("target/libs")
+    }
+
+    override fun getClassFolderPath(): Path {
+        return path.resolve("target")
+    }
 }

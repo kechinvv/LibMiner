@@ -5,7 +5,7 @@ import com.google.gson.JsonParser
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.eclipse.jgit.api.Git
-import org.kechinvv.config.Configuration
+import org.kechinvv.config.ProjectsConfiguration
 import org.kechinvv.utils.PrjSource
 import java.io.File
 import java.io.IOException
@@ -21,11 +21,11 @@ import kotlin.io.path.notExists
 class GhRemoteRepository(
     override val repositoryData: RepositoryData,
     private val client: OkHttpClient,
-    val configuration: Configuration
+    val configuration: ProjectsConfiguration
 ) :
     RemoteRepository {
 
-    constructor(repoJSON: JsonObject, client: OkHttpClient, configuration: Configuration) : this(
+    constructor(repoJSON: JsonObject, client: OkHttpClient, configuration: ProjectsConfiguration) : this(
         RepositoryData(
             name = repoJSON.get("full_name").toString().split('/')[1].replace("\"", ""),
             author =  repoJSON.get("full_name").toString().split('/')[0].replace("\"", ""),

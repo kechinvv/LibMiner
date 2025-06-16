@@ -1,38 +1,24 @@
 package org.kechinvv.config
 
 import kotlinx.serialization.Serializable
+import java.nio.file.Path
+import java.nio.file.Paths
 
 @Serializable
 class Configuration {
-    var ghQuerySearch: String = ""
-    var ghLanguageSearch: String? = "java"
-    var ghToken: String = ""
-    var ghFileName: String? = null
-    var onlyWithJars: Boolean = false
-    var useGh: Boolean = true
-
-    var targetLibGroup: String = ""
-    var targetLibName: String = ""
-    var targetLibVersion: String = ""
-    var useMvn: Boolean = true
+    var projectsConfiguration: ProjectsConfiguration = ProjectsConfiguration()
+    var fsmConfiguration: FsmConfiguration = FsmConfiguration()
 
     // qualified package or class
     var targetLibExtractingUnit: Set<String> = setOf("")
 
-    var mavenPathOrEnvVar: String = "mvn"
-
-    // Auto get necessary gradle for every project if null or
-    // Installed gradle (optional)
-    var gradlePath: String? = null
-
-    // Version for downloaded gradle (optional)
-    var gradleVersion: String? = null
 
     // 0 - limitless
-    var countOfProjects: Int = 0
+    var countOfProjects: Int = 1000
 
-    var workdir: String = "."
-    var sourceDB: String? = null
+    var workdir: Path = Paths.get(".")
+    var sourceDB: Path = workdir.resolve("db.db")
+    var cacheSize: Int = 10000
 
     // fuzzing limits
     var fuzzingExecutions: Int = 100
@@ -42,7 +28,4 @@ class Configuration {
     var traversLength: Int = 1000
     var traversDepth: Int = 6
     var traceCount: Int = 1000000
-
-
-    var fsmConfiguration = FsmConfiguration()
 }

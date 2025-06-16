@@ -2,7 +2,6 @@ package org.kechinvv.workflow
 
 import okhttp3.OkHttpClient
 import org.kechinvv.analysis.JazzerRunner
-import org.kechinvv.analysis.SceneExtractor
 import org.kechinvv.analysis.SootManager
 import org.kechinvv.config.Configuration
 import org.kechinvv.inference.FSMInference
@@ -38,41 +37,44 @@ class TestOkhttpWorkflow {
 
     }
 
-    fun collectStaticTraces() {
-        val extractor = SceneExtractor(config, storage)
-        config.targetLibExtractingUnit = setOf("okhttp", "okhttp3", "com.squareup.okhttp")
 
-        var total = 0
-        Files.walk(workdir, 2).filter { it != workdir && it.isDirectory() }.forEach { dir ->
-
-            try {
-                val targetJar = dir.walk().first { it.nameWithoutExtension == dir.name && it.extension == "jar" }
-                val jarRepo = JarLocalRepository(targetJar, dir)
-                println(jarRepo.targetJar)
-                println(total)
-                extractor.runAnalyze(jarRepo.targetJar)
-                total++
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-
-        }
-        println(total)
-    }
-
-    fun traceCollectSimple() {
-        val extractor = SceneExtractor(config, storage)
-
-        extractor.runAnalyze(Paths.get("C:\\Users\\valer\\IdeaProjects\\libminer_test\\build\\libs\\libminer_test-1.0-SNAPSHOT.jar"))
-    }
 
     fun inference() {
         config.fsmConfiguration.jsonAndDotFilesPath = workdir
         config.fsmConfiguration.mintFilesPath = workdir
         config.fsmConfiguration.kTail = 1
         val fsmInference = FSMInference(config.fsmConfiguration, storage)
-        fsmInference.inferenceByClass("java.io.File")
+        fsmInference.inferenceAll()
     }
+
+    fun inferenceDynamic() {
+        config.fsmConfiguration.jsonAndDotFilesPath = workdir.resolve("dynamic")
+        config.fsmConfiguration.mintFilesPath = workdir.resolve("dynamic")
+        config.fsmConfiguration.kTail = 1
+        val fsmInference = FSMInference(config.fsmConfiguration, storage)
+        fsmInference.inferenceAll({ traceHolder ->
+            traceHolder.extractMethod == ExtractMethod.DYNAMIC
+        })
+    }
+
+    fun inferenceStatic() {
+        config.fsmConfiguration.jsonAndDotFilesPath = workdir.resolve("static")
+        config.fsmConfiguration.mintFilesPath = workdir.resolve("static")
+        config.fsmConfiguration.kTail = 1
+        val fsmInference = FSMInference(config.fsmConfiguration, storage)
+        fsmInference.inferenceAll({ traceHolder ->
+            traceHolder.extractMethod == ExtractMethod.STATIC
+        })
+    }
+
+    fun inferenceAll() {
+        config.fsmConfiguration.jsonAndDotFilesPath = workdir.resolve("static+dynamic")
+        config.fsmConfiguration.mintFilesPath = workdir.resolve("static+dynamic")
+        config.fsmConfiguration.kTail = 1
+        val fsmInference = FSMInference(config.fsmConfiguration, storage)
+        fsmInference.inferenceAll()
+    }
+
 
 
     fun collectStaticTracesNew() {
@@ -98,7 +100,7 @@ class TestOkhttpWorkflow {
 
     fun collectDynamicTraces() {
         config.targetLibExtractingUnit = setOf("okhttp", "okhttp3", "com.squareup.okhttp")
-        val jazzerRunner = JazzerRunner(100000, 300)
+        val jazzerRunner = JazzerRunner(10000, 300)
         var total = 0
         Files.walk(workdir_instr, 2).filter { it != workdir_instr && it.isDirectory() }.forEach { dir ->
 
@@ -118,7 +120,7 @@ class TestOkhttpWorkflow {
                     )
                     val traces = jarRepo.extractTracesFromLogs()
                     println(traces)
-                    traces.forEach { trace -> storage.saveTrace(trace.value, trace.value.first().klass, ExtractMethod.DYNAMIC) }
+                    traces.forEach { trace -> if (trace.trace.size > 1) storage.saveTrace(trace) }
                     jarRepo.cleanLibMinerLogs()
                 }
                 total++

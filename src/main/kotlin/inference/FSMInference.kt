@@ -6,11 +6,13 @@ import org.kechinvv.config.FsmConfiguration
 import org.kechinvv.entities.MethodData
 import org.kechinvv.holders.TraceHolder
 import org.kechinvv.storage.Storage
+import org.kechinvv.utils.logger
 import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
+import java.util.function.Predicate
 import kotlin.io.path.createDirectories
 
 class FSMInference(
@@ -22,20 +24,36 @@ class FSMInference(
         configuration.jsonAndDotFilesPath.createDirectories()
     }
 
+    companion object {
+        val LOG by logger()
+    }
 
-    fun inferenceAll(toJson: Boolean = configuration.toJson, unionEnd: Boolean = configuration.unionEnd) {
+
+    fun inferenceAll(
+        filter: Predicate<TraceHolder>? = null,
+        toJson: Boolean = configuration.toJson,
+        unionEnd: Boolean = configuration.unionEnd,
+    ) {
         val klasses = storage.getClasses()
+        LOG.info("classes = {}", klasses)
+
         klasses.forEach {
-            inferenceByClass(it, toJson, unionEnd)
+            try {
+                inferenceByClass(it, filter, toJson, unionEnd)
+            } catch (e: Throwable) {
+                e.printStackTrace()
+                LOG.warn("Failed to inference {} model", it)
+            }
         }
     }
 
     fun inferenceByClass(
         klass: String,
+        filter: Predicate<TraceHolder>? = null,
         toJson: Boolean = configuration.toJson,
         unionEnd: Boolean = configuration.unionEnd
     ): InferenceResult {
-        val traces = storage.getTracesForClass(klass)
+        val traces = storage.getTracesForClass(klass, filter = filter)
         val methods = traces.flatMap { traceHolder -> traceHolder.trace }.toHashSet()
         val klassStr = klass.replace(".", "+")
         val filePathIn = createInputFile(methods, klassStr)

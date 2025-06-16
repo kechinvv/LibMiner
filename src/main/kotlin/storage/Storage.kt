@@ -21,7 +21,7 @@ import kotlin.io.path.createDirectories
 
 class Storage(dbName: Path, private val cashSize: Int = 10000) {
 
-    private val database: Database
+    val database: Database
 
     private var simpleRepoCash = LinkedHashSet<RepositoryData>()
 
@@ -57,6 +57,18 @@ class Storage(dbName: Path, private val cashSize: Int = 10000) {
             set(it.extract_method, extractMethod.name)
             onConflict(it.trace, it.klass, it.extract_method) {
                 set(it.count, it.count.plus(1))
+            }
+        }
+    }
+
+    fun saveTrace(traceHolder: TraceHolder) {
+        database.insertOrUpdate(SequenceEntity) {
+            set(it.trace, Json.encodeToString(traceHolder.trace))
+            set(it.klass, traceHolder.getTargetClass())
+            set(it.count, traceHolder.count)
+            set(it.extract_method, traceHolder.extractMethod.name)
+            onConflict(it.trace, it.klass, it.extract_method) {
+                set(it.count, it.count.plus(traceHolder.count))
             }
         }
     }

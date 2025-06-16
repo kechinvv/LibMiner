@@ -1,9 +1,8 @@
 package org.kechinvv.analysis
 
-import com.charleskorn.kaml.Yaml
 import org.kechinvv.config.Configuration
-import org.kechinvv.entities.EntryFilter
 import org.kechinvv.entities.MethodData
+import org.kechinvv.holders.TraceHolder
 import org.kechinvv.storage.Storage
 import org.kechinvv.utils.ExtractMethod
 import org.kechinvv.utils.foundLib
@@ -14,11 +13,6 @@ import soot.jimple.internal.AbstractStmt
 import soot.jimple.internal.JAssignStmt
 import soot.jimple.spark.pag.PAG
 import soot.jimple.toolkits.ide.icfg.JimpleBasedInterproceduralCFG
-import java.nio.file.Files
-import java.nio.file.Paths
-import java.util.stream.Collectors
-import kotlin.io.path.extension
-import kotlin.io.path.readText
 
 class SequenceCollectorTransformer(val storage: Storage, val configuration: Configuration) :
     SceneTransformer() {
@@ -26,8 +20,8 @@ class SequenceCollectorTransformer(val storage: Storage, val configuration: Conf
     lateinit var analysis: PAG
     private var counter = 0
     private var stop = false
-    private val filters = Files.walk(Paths.get("entry_points_filters")).filter { it.extension == "yaml" }
-        .map { Yaml.default.decodeFromString(EntryFilter.serializer(), it.readText()) }.collect(Collectors.toSet())
+
+    private lateinit var tracesForSave: HashMap<List<MethodData>, Int>
 
     companion object {
         val LOG by logger()
@@ -46,9 +40,20 @@ class SequenceCollectorTransformer(val storage: Storage, val configuration: Conf
             LOG.info("Starting with : {}", startPoints)
             stop = false
             counter = 0
-
+            tracesForSave = HashMap()
             startPoints.forEach { startPoint -> graphTraverseLib(startPoint) }
             LOG.info("Total traces analyzed = {}", counter)
+            tracesForSave.forEach { traceData ->
+                if (traceData.key.size > 1) {
+                    storage.saveTrace(
+                        TraceHolder(
+                            traceData.key,
+                            ExtractMethod.STATIC,
+                            traceData.value
+                        )
+                    )
+                }
+            }
         }
     }
 
@@ -137,7 +142,7 @@ class SequenceCollectorTransformer(val storage: Storage, val configuration: Conf
             tracesInvokeExpr.forEach inner@{ traceInvokeExpr ->
                 if (traceInvokeExpr.size == 0) return@inner
                 val traceMethodData = traceInvokeExpr.map { MethodData.fromSootMethod(it.invokeExpr.method) }
-                storage.saveTrace(traceMethodData, klass, ExtractMethod.STATIC)
+                tracesForSave[traceMethodData] = (tracesForSave[traceMethodData] ?: 0) + 1
             }
         }
     }

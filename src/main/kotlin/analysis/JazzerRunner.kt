@@ -6,6 +6,7 @@ import org.kechinvv.utils.logger
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
 import kotlin.io.path.absolute
 import kotlin.io.path.extension
@@ -22,7 +23,7 @@ class JazzerRunner(val fuzzingExecutions: Int, val fuzzingTimeInSeconds: Int) {
             Files.walk(cp).filter { it.extension == "jar" }.map { it.toAbsolutePath() }.toList()
         }
             .joinToString(File.pathSeparator)
-        val devNull = if (SystemUtils.IS_OS_WINDOWS) "nul" else "/dev/null"
+        val pathNul =  Paths.get(if (SystemUtils.IS_OS_WINDOWS) "nul" else "/dev/null").toAbsolutePath()
 
         val jazzerProcess = ProcessBuilder(
             jazzerExecutor.toString(),
@@ -31,7 +32,7 @@ class JazzerRunner(val fuzzingExecutions: Int, val fuzzingTimeInSeconds: Int) {
             "-runs=$fuzzingExecutions",
             "-max_total_time=$fuzzingTimeInSeconds",
             "--autofuzz=$targetMethod",
-            "--reproducer_path=$devNull",
+            "--reproducer_path=\"$pathNul\"",
             "--jvm_args=\"-Duser.dir=${workingDir.toAbsolutePath()}\""
         )
 
@@ -40,7 +41,7 @@ class JazzerRunner(val fuzzingExecutions: Int, val fuzzingTimeInSeconds: Int) {
         LOG.info(jazzerProcess.command().joinToString(" "))
         val ps = jazzerProcess.start()
         LOG.debug(ps.pid().toString())
-        val res = ps.waitFor(60 * 2, TimeUnit.SECONDS)
+        val res = ps.waitFor((fuzzingTimeInSeconds * 2).toLong(), TimeUnit.SECONDS)
         LOG.debug("fuzzing end = $res")
         ps.destroyForcibly()
     }

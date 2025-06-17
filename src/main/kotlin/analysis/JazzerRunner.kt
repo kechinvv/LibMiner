@@ -8,6 +8,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
 import kotlin.io.path.absolute
+import kotlin.io.path.createDirectories
 
 class JazzerRunner(val fuzzingExecutions: Int, val fuzzingTimeInSeconds: Int) {
     private val jazzerExecutor: Path = JazzerDownloader().getOrDownload().absolute()
@@ -20,8 +21,8 @@ class JazzerRunner(val fuzzingExecutions: Int, val fuzzingTimeInSeconds: Int) {
         val jazzerCpArg = classpathDirs.map { it.toAbsolutePath() }.toList()
 
             .joinToString(File.pathSeparator)
-        val pathNul =  Paths.get(if (SystemUtils.IS_OS_WINDOWS) "nul" else "/dev/null").toAbsolutePath()
-
+        val pathNul =  Paths.get(if (SystemUtils.IS_OS_WINDOWS) "trash" else "/dev/null").toAbsolutePath()
+        pathNul.createDirectories()
         val jazzerProcess = ProcessBuilder(
             jazzerExecutor.toString(),
             "--cp=\"$jazzerCpArg\"",

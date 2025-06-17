@@ -77,6 +77,9 @@ class DefaultWorkflow(val configuration: Configuration) {
             val entryPoints = SootManager.getEntryPoints(targetJar)
             entryPoints.forEach { entryPoint ->
                 jazzer.run(localRepo.getJars().toList(), entryPoint.getPathForFuzz(), localRepo.path)
+                localRepo.extractTracesFromLogs()
+                    .forEach { trace -> if (trace.trace.size > 1) storage.saveTrace(trace) }
+                localRepo.cleanLibMinerLogs()
             }
         }
     }
